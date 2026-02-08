@@ -10,6 +10,10 @@ export interface DirectoryInsuranceCompany {
   city: string;
   state: string;
   zip: string;
+  mailing_address: string;
+  mailing_city: string;
+  mailing_state: string;
+  mailing_zip: string;
   phone: string;
   fax: string;
   claims_phone: string;

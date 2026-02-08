@@ -38,6 +38,10 @@ interface FormData {
   city: string;
   state: string;
   zip: string;
+  mailing_address: string;
+  mailing_city: string;
+  mailing_state: string;
+  mailing_zip: string;
   phone: string;
   fax: string;
   contact_person: string;
@@ -46,7 +50,8 @@ interface FormData {
 
 const emptyForm: FormData = {
   name: '', type: 'hospital', address: '', city: '', state: '',
-  zip: '', phone: '', fax: '', contact_person: '', notes: '',
+  zip: '', mailing_address: '', mailing_city: '', mailing_state: '', mailing_zip: '',
+  phone: '', fax: '', contact_person: '', notes: '',
 };
 
 export const DirectoryProviders: React.FC = () => {
@@ -94,7 +99,9 @@ export const DirectoryProviders: React.FC = () => {
     setEditingId(p.id);
     setForm({
       name: p.name, type: p.type, address: p.address, city: p.city,
-      state: p.state, zip: p.zip, phone: p.phone, fax: p.fax,
+      state: p.state, zip: p.zip, mailing_address: p.mailing_address,
+      mailing_city: p.mailing_city, mailing_state: p.mailing_state,
+      mailing_zip: p.mailing_zip, phone: p.phone, fax: p.fax,
       contact_person: p.contact_person, notes: p.notes,
     });
     setShowForm(true);
@@ -188,6 +195,24 @@ export const DirectoryProviders: React.FC = () => {
               <input className={inputClass} value={form.zip} onChange={e => setForm({ ...form, zip: e.target.value })} />
             </div>
           </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Mailing Address</label>
+            <input className={inputClass} value={form.mailing_address} onChange={e => setForm({ ...form, mailing_address: e.target.value })} placeholder="P.O. Box or mailing address" />
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Mailing City</label>
+              <input className={inputClass} value={form.mailing_city} onChange={e => setForm({ ...form, mailing_city: e.target.value })} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Mailing State</label>
+              <input className={inputClass} value={form.mailing_state} onChange={e => setForm({ ...form, mailing_state: e.target.value })} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Mailing ZIP</label>
+              <input className={inputClass} value={form.mailing_zip} onChange={e => setForm({ ...form, mailing_zip: e.target.value })} />
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Phone</label>
@@ -261,7 +286,8 @@ export const DirectoryProviders: React.FC = () => {
                       <div><span className="text-[11px] font-bold text-slate-400 uppercase block">Fax</span><span className="text-sm text-slate-800">{p.fax || '--'}</span></div>
                       <div><span className="text-[11px] font-bold text-slate-400 uppercase block">Contact</span><span className="text-sm text-slate-800">{p.contact_person || '--'}</span></div>
                       <div><span className="text-[11px] font-bold text-slate-400 uppercase block">Address</span><span className="text-sm text-slate-800">{[p.address, p.city, p.state, p.zip].filter(Boolean).join(', ') || '--'}</span></div>
-                      <div className="col-span-2"><span className="text-[11px] font-bold text-slate-400 uppercase block">Notes</span><span className="text-sm text-slate-800">{p.notes || '--'}</span></div>
+                      <div><span className="text-[11px] font-bold text-slate-400 uppercase block">Mailing Address</span><span className="text-sm text-slate-800">{[p.mailing_address, p.mailing_city, p.mailing_state, p.mailing_zip].filter(Boolean).join(', ') || '--'}</span></div>
+                      <div><span className="text-[11px] font-bold text-slate-400 uppercase block">Notes</span><span className="text-sm text-slate-800">{p.notes || '--'}</span></div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                       <button onClick={() => handleEdit(p)} className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">Edit</button>

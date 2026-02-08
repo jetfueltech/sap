@@ -28,6 +28,10 @@ interface FormData {
   city: string;
   state: string;
   zip: string;
+  mailing_address: string;
+  mailing_city: string;
+  mailing_state: string;
+  mailing_zip: string;
   phone: string;
   fax: string;
   claims_phone: string;
@@ -37,7 +41,8 @@ interface FormData {
 
 const emptyForm: FormData = {
   name: '', type: 'auto', address: '', city: '', state: '',
-  zip: '', phone: '', fax: '', claims_phone: '', website: '', notes: '',
+  zip: '', mailing_address: '', mailing_city: '', mailing_state: '', mailing_zip: '',
+  phone: '', fax: '', claims_phone: '', website: '', notes: '',
 };
 
 export const DirectoryInsurance: React.FC = () => {
@@ -85,7 +90,9 @@ export const DirectoryInsurance: React.FC = () => {
     setEditingId(c.id);
     setForm({
       name: c.name, type: c.type, address: c.address, city: c.city,
-      state: c.state, zip: c.zip, phone: c.phone, fax: c.fax,
+      state: c.state, zip: c.zip, mailing_address: c.mailing_address,
+      mailing_city: c.mailing_city, mailing_state: c.mailing_state,
+      mailing_zip: c.mailing_zip, phone: c.phone, fax: c.fax,
       claims_phone: c.claims_phone, website: c.website, notes: c.notes,
     });
     setShowForm(true);
@@ -179,6 +186,24 @@ export const DirectoryInsurance: React.FC = () => {
               <input className={inputClass} value={form.zip} onChange={e => setForm({ ...form, zip: e.target.value })} />
             </div>
           </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Mailing Address</label>
+            <input className={inputClass} value={form.mailing_address} onChange={e => setForm({ ...form, mailing_address: e.target.value })} placeholder="P.O. Box or mailing address" />
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Mailing City</label>
+              <input className={inputClass} value={form.mailing_city} onChange={e => setForm({ ...form, mailing_city: e.target.value })} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Mailing State</label>
+              <input className={inputClass} value={form.mailing_state} onChange={e => setForm({ ...form, mailing_state: e.target.value })} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Mailing ZIP</label>
+              <input className={inputClass} value={form.mailing_zip} onChange={e => setForm({ ...form, mailing_zip: e.target.value })} />
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Main Phone</label>
@@ -256,6 +281,7 @@ export const DirectoryInsurance: React.FC = () => {
                       <div><span className="text-[11px] font-bold text-slate-400 uppercase block">Claims Phone</span><span className="text-sm text-slate-800">{c.claims_phone || '--'}</span></div>
                       <div><span className="text-[11px] font-bold text-slate-400 uppercase block">Fax</span><span className="text-sm text-slate-800">{c.fax || '--'}</span></div>
                       <div><span className="text-[11px] font-bold text-slate-400 uppercase block">Address</span><span className="text-sm text-slate-800">{[c.address, c.city, c.state, c.zip].filter(Boolean).join(', ') || '--'}</span></div>
+                      <div><span className="text-[11px] font-bold text-slate-400 uppercase block">Mailing Address</span><span className="text-sm text-slate-800">{[c.mailing_address, c.mailing_city, c.mailing_state, c.mailing_zip].filter(Boolean).join(', ') || '--'}</span></div>
                       <div><span className="text-[11px] font-bold text-slate-400 uppercase block">Website</span><span className="text-sm text-slate-800">{c.website || '--'}</span></div>
                       <div><span className="text-[11px] font-bold text-slate-400 uppercase block">Notes</span><span className="text-sm text-slate-800">{c.notes || '--'}</span></div>
                     </div>
