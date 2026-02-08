@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { CaseFile, CaseStatus, DocumentAttachment, DocumentType, Insurance, ActivityLog, ExtendedIntakeData, Email, CommunicationLog, ChatMessage } from '../types';
 import { analyzeIntakeCase } from '../services/geminiService';
 import { ExtendedIntakeForm } from './ExtendedIntakeForm';
+import { MedicalTreatment } from './MedicalTreatment';
 
 interface CaseDetailProps {
   caseData: CaseFile;
@@ -19,7 +20,7 @@ interface PendingUpload {
 }
 
 export const CaseDetail: React.FC<CaseDetailProps> = ({ caseData, onBack, onUpdateCase }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'extended' | 'documents' | 'ai_analysis' | 'activity_log'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'extended' | 'medical' | 'documents' | 'ai_analysis' | 'activity_log'>('overview');
   const [analyzing, setAnalyzing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   
@@ -541,6 +542,10 @@ export const CaseDetail: React.FC<CaseDetailProps> = ({ caseData, onBack, onUpda
                      {activeTab === 'extended' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></div>}
                  </button>
              )}
+             <button onClick={() => setActiveTab('medical')} className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'medical' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>
+                 Medical Treatment
+                 {activeTab === 'medical' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></div>}
+             </button>
              <button onClick={() => setActiveTab('documents')} className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'documents' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>
                  Documents ({caseData.documents.length})
                  {activeTab === 'documents' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></div>}
@@ -559,6 +564,8 @@ export const CaseDetail: React.FC<CaseDetailProps> = ({ caseData, onBack, onUpda
       {/* 2. Content Area */}
       {activeTab === 'extended' ? (
           <div className="animate-fade-in"><ExtendedIntakeForm caseData={caseData} onSave={handleExtendedIntakeSave} /></div>
+      ) : activeTab === 'medical' ? (
+          <div className="animate-fade-in"><MedicalTreatment caseData={caseData} onUpdateCase={onUpdateCase} /></div>
       ) : activeTab === 'documents' ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-8 animate-fade-in">
              <h3 className="font-bold text-slate-800 mb-6 flex justify-between items-center text-lg">

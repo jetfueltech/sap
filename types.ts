@@ -21,6 +21,27 @@ export interface DocumentAttachment {
   mimeType?: string;
   source?: string; // e.g. "Client Portal", "Email", "Scanner"
   tags?: string[]; // Custom user-defined tags
+  linkedFacilityId?: string;
+}
+
+export type MedicalProviderType = 'hospital' | 'er' | 'urgent_care' | 'chiropractor' | 'physical_therapy' | 'orthopedic' | 'neurologist' | 'pain_management' | 'primary_care' | 'imaging' | 'surgery_center' | 'other';
+
+export interface MedicalProvider {
+  id: string;
+  name: string;
+  type: MedicalProviderType;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  phone?: string;
+  fax?: string;
+  contactPerson?: string;
+  totalCost?: number;
+  notes?: string;
+  dateOfFirstVisit?: string;
+  dateOfLastVisit?: string;
+  isCurrentlyTreating?: boolean;
 }
 
 export interface EmailAttachment {
@@ -287,6 +308,7 @@ export interface CaseFile {
   // Medical (Quick View)
   treatmentStatus?: string;
   treatmentProviders?: string;
+  medicalProviders?: MedicalProvider[];
 
   // System
   status: CaseStatus;
