@@ -1,0 +1,414 @@
+
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { CaseFile, CaseStatus } from '../types';
+
+interface DashboardProps {
+  cases: CaseFile[];
+  onSelectCase: (c: CaseFile) => void;
+  onOpenNewIntake: () => void;
+  onUpdateCase: (c: CaseFile) => void;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ cases, onSelectCase, onOpenNewIntake, onUpdateCase }) => {
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [teamFilter, setTeamFilter] = useState<string>('ALL');
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+
+  // Kanban Drag State
+  const [draggedCaseId, setDraggedCaseId] = useState<string | null>(null);
+
+  // Table Edit State
+  const [editingStatusId, setEditingStatusId] = useState<string | null>(null);
+  const statusMenuRef = useRef<HTMLDivElement>(null);
+
+  // Click outside listener for status menu
+  useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+          if (statusMenuRef.current && !statusMenuRef.current.contains(event.target as Node)) {
+              setEditingStatusId(null);
+          }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Filter Logic
+  const filteredCases = cases.filter(c => {
+      const matchStatus = statusFilter === 'ALL' || c.status === statusFilter;
+      const matchTeam = teamFilter === 'ALL' || (teamFilter === 'Unassigned' ? !c.assignedTeam : c.assignedTeam === teamFilter);
+      return matchStatus && matchTeam;
+  });
+
+  // Sorting Logic
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+        direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedCases = useMemo(() => {
+    let sortableItems = [...filteredCases];
+    if (sortConfig !== null) {
+        sortableItems.sort((a, b) => {
+            if (sortConfig.key === 'accidentDate') {
+                const dateA = new Date(a.accidentDate).getTime();
+                const dateB = new Date(b.accidentDate).getTime();
+                return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
+            }
+            return 0;
+        });
+    }
+    return sortableItems;
+  }, [filteredCases, sortConfig]);
+
+  const getStatusStyle = (status: CaseStatus) => {
+    switch (status) {
+      case CaseStatus.NEW: return 'bg-blue-100 text-blue-700 border-blue-200';
+      case CaseStatus.REVIEW_NEEDED: return 'bg-amber-100 text-amber-700 border-amber-200';
+      case CaseStatus.ACCEPTED: return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case CaseStatus.REJECTED: return 'bg-slate-100 text-slate-600 border-slate-200';
+      case CaseStatus.LOST_CONTACT: return 'bg-stone-100 text-stone-600 border-stone-200';
+      case CaseStatus.INTAKE_PROCESSING: return 'bg-purple-100 text-purple-700 border-purple-200';
+      case CaseStatus.INTAKE_PAUSED: return 'bg-orange-100 text-orange-700 border-orange-200';
+      case CaseStatus.INTAKE_COMPLETE: return 'bg-teal-100 text-teal-700 border-teal-200';
+      default: return 'bg-gray-100 text-gray-600 border-gray-200';
+    }
+  };
+
+  const getInsuranceSummary = (c: CaseFile) => {
+      const defIns = c.insurance?.find(i => i.type === 'Defendant');
+      if (defIns) return `${defIns.provider} ${defIns.coverageLimits ? `(${defIns.coverageLimits})` : ''}`;
+      const clientIns = c.insurance?.find(i => i.type === 'Client');
+      if (clientIns) return `${clientIns.provider} (First Party)`;
+      return 'Pending';
+  };
+
+  const kanbanColumns = [
+      { title: 'New / Analyzing', statuses: [CaseStatus.NEW, CaseStatus.ANALYZING], color: 'border-blue-500' },
+      { title: 'Review Needed', statuses: [CaseStatus.REVIEW_NEEDED], color: 'border-amber-500' },
+      { title: 'Active / Processing', statuses: [CaseStatus.ACCEPTED, CaseStatus.INTAKE_PROCESSING], color: 'border-purple-500' },
+      { title: 'On Hold', statuses: [CaseStatus.INTAKE_PAUSED, CaseStatus.LOST_CONTACT], color: 'border-orange-500' },
+      { title: 'Closed', statuses: [CaseStatus.INTAKE_COMPLETE, CaseStatus.REJECTED], color: 'border-slate-500' },
+  ];
+
+  // Drag and Drop Handlers
+  const handleDragStart = (e: React.DragEvent, caseId: string) => {
+      setDraggedCaseId(caseId);
+      e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetStatuses: CaseStatus[]) => {
+      e.preventDefault();
+      if (!draggedCaseId) return;
+
+      const caseToMove = cases.find(c => c.id === draggedCaseId);
+      // If we found the case and it's not already in one of the target statuses
+      if (caseToMove && !targetStatuses.includes(caseToMove.status)) {
+          // Default to the first status in the list (e.g. drop in "New / Analyzing" -> become "NEW")
+          const newStatus = targetStatuses[0];
+          
+          let updatedCase = { ...caseToMove, status: newStatus };
+          
+          // Add Activity Log
+          const newLog = {
+            id: Math.random().toString(36).substr(2, 9),
+            type: 'system' as const,
+            message: `Status updated to ${newStatus} via board move.`,
+            timestamp: new Date().toISOString()
+          };
+          updatedCase.activityLog = [newLog, ...(updatedCase.activityLog || [])];
+
+          onUpdateCase(updatedCase);
+      }
+      setDraggedCaseId(null);
+  };
+
+  const handleStatusUpdate = (c: CaseFile, newStatus: CaseStatus) => {
+      let updatedCase = { ...c, status: newStatus };
+      const newLog = {
+        id: Math.random().toString(36).substr(2, 9),
+        type: 'system' as const,
+        message: `Status manually updated to ${newStatus}.`,
+        timestamp: new Date().toISOString()
+      };
+      updatedCase.activityLog = [newLog, ...(updatedCase.activityLog || [])];
+      onUpdateCase(updatedCase);
+      setEditingStatusId(null);
+  };
+
+  return (
+    <div className="space-y-8 animate-fade-in pb-10">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Intake Dashboard</h1>
+          <p className="text-slate-500 mt-2 text-lg">Manage incoming agency referrals and case status.</p>
+        </div>
+        <div className="flex items-center gap-4">
+            <div className="bg-white border border-slate-200 p-1 rounded-lg flex items-center">
+                <button 
+                    onClick={() => setViewMode('table')}
+                    className={`p-2 rounded-md transition-colors ${viewMode === 'table' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    title="Table View"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+                </button>
+                <button 
+                    onClick={() => setViewMode('kanban')}
+                    className={`p-2 rounded-md transition-colors ${viewMode === 'kanban' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    title="Kanban View"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" /></svg>
+                </button>
+            </div>
+            <button
+              onClick={onOpenNewIntake}
+              className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-indigo-300 transition-all flex items-center justify-center group"
+            >
+              <div className="bg-indigo-500 p-1 rounded-lg mr-3 group-hover:bg-indigo-600 transition-colors">
+                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+              </div>
+              New Client Intake
+            </button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4 items-center bg-white p-2 rounded-xl border border-slate-200 w-fit">
+            <div className="px-2">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Filters:</span>
+            </div>
+            <select 
+                className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 outline-none cursor-pointer hover:bg-slate-100 transition-colors"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+            >
+                <option value="ALL">All Statuses</option>
+                <option value={CaseStatus.NEW}>New</option>
+                <option value={CaseStatus.REVIEW_NEEDED}>Review Needed</option>
+                <option value={CaseStatus.ACCEPTED}>Accepted</option>
+                <option value={CaseStatus.REJECTED}>Rejected</option>
+                <option value={CaseStatus.LOST_CONTACT}>Lost Contact</option>
+                <option value={CaseStatus.INTAKE_PROCESSING}>Processing</option>
+                <option value={CaseStatus.INTAKE_COMPLETE}>Complete</option>
+            </select>
+
+            <select 
+                className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 outline-none cursor-pointer hover:bg-slate-100 transition-colors"
+                value={teamFilter}
+                onChange={(e) => setTeamFilter(e.target.value)}
+            >
+                <option value="ALL">All Teams</option>
+                <option value="Unassigned">Unassigned</option>
+                <option value="Team A">Team A</option>
+                <option value="Team B">Team B</option>
+            </select>
+            
+            {(statusFilter !== 'ALL' || teamFilter !== 'ALL') && (
+                <button 
+                    onClick={() => { setStatusFilter('ALL'); setTeamFilter('ALL'); }}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2"
+                >
+                    Reset
+                </button>
+            )}
+      </div>
+
+      {viewMode === 'table' ? (
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col shadow-sm">
+             <div className="overflow-x-auto w-full">
+                <div className="min-w-[1200px] pb-12">
+                    {/* Header Row */}
+                    <div className="grid grid-cols-[140px_180px_110px_2fr_1fr_1fr_1fr_60px] gap-4 px-6 py-4 bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        <div>Status</div>
+                        <div>Client Name</div>
+                        <div 
+                            className="flex items-center cursor-pointer group hover:text-indigo-600 transition-colors select-none" 
+                            onClick={() => handleSort('accidentDate')}
+                        >
+                            DOL
+                            <div className="ml-1 flex flex-col">
+                                <svg className={`w-2 h-2 ${sortConfig?.key === 'accidentDate' && sortConfig.direction === 'asc' ? 'text-indigo-600' : 'text-slate-300'}`} fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l-8 8h16l-8-8z" /></svg>
+                                <svg className={`w-2 h-2 -mt-0.5 ${sortConfig?.key === 'accidentDate' && sortConfig.direction === 'desc' ? 'text-indigo-600' : 'text-slate-300'}`} fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l8-8H4l8 8z" /></svg>
+                            </div>
+                        </div>
+                        <div>Description</div>
+                        <div>Impact</div>
+                        <div>Source</div>
+                        <div>Insurance</div>
+                        <div className="text-right">Action</div>
+                    </div>
+
+                    {cases.length === 0 ? (
+                        <div className="p-16 text-center text-slate-400 bg-slate-50/50">
+                            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-100">
+                                <svg className="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                            </div>
+                            <p className="text-xl font-medium text-slate-600">No active intakes</p>
+                            <p className="text-slate-500 mt-2">Click "New Client Intake" to start.</p>
+                        </div>
+                    ) : sortedCases.length === 0 ? (
+                        <div className="p-16 text-center text-slate-400">
+                            <p className="text-lg font-medium text-slate-500">No cases match your filters.</p>
+                            <button onClick={() => { setStatusFilter('ALL'); setTeamFilter('ALL'); }} className="text-blue-600 font-bold mt-2 hover:underline">Clear Filters</button>
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-slate-100">
+                            {sortedCases.map((c) => (
+                                <div key={c.id} className="grid grid-cols-[140px_180px_110px_2fr_1fr_1fr_1fr_60px] gap-4 px-6 py-4 items-center hover:bg-slate-50 transition-colors group cursor-pointer relative" onClick={() => onSelectCase(c)}>
+                                    
+                                    {/* Status - Interactive */}
+                                    <div className="relative">
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setEditingStatusId(editingStatusId === c.id ? null : c.id);
+                                            }}
+                                            className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border shadow-sm hover:opacity-80 transition-opacity ${getStatusStyle(c.status)}`}
+                                        >
+                                            {c.status === CaseStatus.INTAKE_PROCESSING ? 'Processing' : c.status.replace(/_/g, ' ')}
+                                            <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                        </button>
+                                        
+                                        {/* Status Dropdown */}
+                                        {editingStatusId === c.id && (
+                                            <div ref={statusMenuRef} className="absolute top-8 left-0 z-50 bg-white border border-slate-200 shadow-xl rounded-xl w-48 py-1 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                                                <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 bg-slate-50">Update Status</div>
+                                                <div className="max-h-60 overflow-y-auto">
+                                                    {Object.values(CaseStatus).map((status) => (
+                                                        <button 
+                                                            key={status}
+                                                            onClick={() => handleStatusUpdate(c, status)}
+                                                            className={`w-full text-left px-4 py-2 text-xs font-medium hover:bg-slate-50 flex items-center ${c.status === status ? 'text-indigo-600 bg-indigo-50' : 'text-slate-700'}`}
+                                                        >
+                                                            <span className={`w-2 h-2 rounded-full mr-2 ${getStatusStyle(status).split(' ')[0]}`}></span>
+                                                            {status.replace(/_/g, ' ')}
+                                                            {c.status === status && <svg className="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Client Name */}
+                                    <div>
+                                        <div className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors text-sm truncate pr-2">{c.clientName}</div>
+                                    </div>
+
+                                    {/* Date of Loss */}
+                                    <div>
+                                        <div className="text-xs text-slate-500 font-medium">{new Date(c.accidentDate).toLocaleDateString()}</div>
+                                    </div>
+                                    
+                                    {/* Description */}
+                                    <div>
+                                        <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed" title={c.description}>{c.description}</p>
+                                    </div>
+
+                                    {/* Impact */}
+                                    <div>
+                                        {c.impact ? (
+                                            <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded border border-slate-200 inline-block whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+                                                {c.impact}
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs text-slate-400 italic">--</span>
+                                        )}
+                                    </div>
+
+                                    {/* Source */}
+                                    <div>
+                                        <div className="text-xs text-slate-500 font-medium truncate" title={c.referralSource}>{c.referralSource}</div>
+                                    </div>
+
+                                    {/* Insurance */}
+                                    <div>
+                                        <span className="text-xs font-medium text-slate-700 block truncate" title={getInsuranceSummary(c)}>
+                                            {getInsuranceSummary(c)}
+                                        </span>
+                                    </div>
+
+                                    {/* Action */}
+                                    <div className="text-right">
+                                        <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all">
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+             </div>
+        </div>
+      ) : (
+        /* Kanban View */
+        <div className="flex overflow-x-auto pb-6 -mx-4 px-4 gap-6 min-h-[500px]">
+            {kanbanColumns.map((col) => {
+                const colCases = sortedCases.filter(c => col.statuses.includes(c.status));
+                const isDragTarget = draggedCaseId && !colCases.some(c => c.id === draggedCaseId);
+                
+                return (
+                    <div 
+                        key={col.title} 
+                        className={`flex-shrink-0 w-80 flex flex-col transition-colors rounded-xl p-2 -m-2 ${isDragTarget ? 'bg-slate-100' : ''}`}
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, col.statuses)}
+                    >
+                        <div className={`flex items-center justify-between mb-4 pb-2 border-b-2 ${col.color} mx-2 mt-2`}>
+                            <h3 className="font-bold text-slate-700 text-sm uppercase tracking-wide">{col.title}</h3>
+                            <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{colCases.length}</span>
+                        </div>
+                        <div className="flex-1 space-y-3 px-2 pb-2">
+                            {colCases.map(c => (
+                                <div 
+                                    key={c.id} 
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, c.id)}
+                                    onClick={() => onSelectCase(c)}
+                                    className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer group active:cursor-grabbing ${draggedCaseId === c.id ? 'opacity-50 border-dashed border-slate-400' : ''}`}
+                                >
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h4 className="font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors pointer-events-none">{c.clientName}</h4>
+                                        <span className="text-[10px] font-medium text-slate-400 pointer-events-none">{new Date(c.accidentDate).toLocaleDateString(undefined, { month:'numeric', day:'numeric'})}</span>
+                                    </div>
+                                    <p className="text-xs text-slate-500 line-clamp-2 mb-3 pointer-events-none">{c.description}</p>
+                                    <div className="flex items-center justify-between pointer-events-none">
+                                        <div className="flex gap-1">
+                                            {c.impact && (
+                                                <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200">
+                                                    {c.impact}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {c.aiAnalysis && (
+                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${c.aiAnalysis.caseScore >= 8 ? 'bg-green-100 text-green-700' : c.aiAnalysis.caseScore >= 5 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                                                AI: {c.aiAnalysis.caseScore}/10
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                            {colCases.length === 0 && (
+                                <div className="text-center py-8 border-2 border-dashed border-slate-100 rounded-xl">
+                                    <p className="text-xs text-slate-400">Drop here</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+      )}
+    </div>
+  );
+};
