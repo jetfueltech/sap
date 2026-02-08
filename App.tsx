@@ -7,6 +7,7 @@ import { NewIntakePage } from './components/NewIntakePage';
 import { Analytics } from './components/Analytics';
 import { Settings } from './components/Settings';
 import { Inbox } from './components/Inbox';
+import { Directory } from './components/Directory';
 import { CaseFile, CaseStatus, Email, DocumentAttachment } from './types';
 import { classifyAttachmentType } from './services/geminiService';
 
@@ -534,6 +535,10 @@ export default function App() {
           
           {currentView === 'analytics' && !selectedCase && (
             <Analytics />
+          )}
+
+           {currentView === 'directory' && !selectedCase && (
+            <Directory />
           )}
 
            {currentView === 'settings' && !selectedCase && (

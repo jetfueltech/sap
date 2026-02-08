@@ -116,3 +116,31 @@ export async function saveProviderToDirectory(provider: {
   }
   return data;
 }
+
+export async function updateProviderInDirectory(id: string, updates: Partial<Omit<DirectoryProvider, 'id' | 'created_at'>>): Promise<DirectoryProvider | null> {
+  const { data, error } = await supabase
+    .from('medical_providers_directory')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error updating provider:', error);
+    return null;
+  }
+  return data;
+}
+
+export async function deleteProviderFromDirectory(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('medical_providers_directory')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting provider:', error);
+    return false;
+  }
+  return true;
+}
