@@ -2,7 +2,15 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { CaseFile, AIAnalysis, Email, EmailMatchAnalysis, DocumentType } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+let ai: GoogleGenAI | null = null;
+
+function getAI(): GoogleGenAI | null {
+  if (ai) return ai;
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) return null;
+  ai = new GoogleGenAI({ apiKey });
+  return ai;
+}
 
 export const analyzeIntakeCase = async (caseFile: CaseFile): Promise<AIAnalysis> => {
   // Construct a rich prompt with all available data
@@ -64,8 +72,21 @@ export const analyzeIntakeCase = async (caseFile: CaseFile): Promise<AIAnalysis>
     }
   });
 
+  const client = getAI();
+  if (!client) {
+    return {
+      caseScore: 5,
+      liabilityAssessment: "AI analysis unavailable. Please review manually.",
+      retainerValid: false,
+      retainerNotes: "API key not configured.",
+      summary: "Automated analysis requires a Gemini API key.",
+      recommendedAction: 'INVESTIGATE' as const,
+      keyRiskFactors: ["AI unavailable"]
+    };
+  }
+
   try {
-    const response = await ai.models.generateContent({
+    const response = await client.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: {
         parts: parts
@@ -139,8 +160,13 @@ export const matchEmailToCase = async (email: Email, cases: CaseFile[]): Promise
     Return JSON format only.
   `;
 
+  const client = getAI();
+  if (!client) {
+    return { suggestedCaseId: null, confidenceScore: 0, reasoning: "AI unavailable - API key not configured" };
+  }
+
   try {
-    const response = await ai.models.generateContent({
+    const response = await client.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
       config: {
@@ -192,8 +218,11 @@ export const classifyAttachmentType = async (fileName: string, emailSubject: str
     - BE PRECISE. Return ONLY the type string from the list above. Do not return JSON.
   `;
 
+  const client = getAI();
+  if (!client) return 'other';
+
   try {
-    const response = await ai.models.generateContent({
+    const response = await client.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
       config: {
