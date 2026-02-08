@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { CaseFile, MedicalProvider, MedicalProviderType, DocumentAttachment } from '../types';
+import { searchProviders, saveProviderToDirectory, DirectoryProvider } from '../services/medicalProviderService';
 
 interface MedicalTreatmentProps {
   caseData: CaseFile;
@@ -58,6 +59,25 @@ function formatCurrency(val: number | undefined): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 }
 
+function directoryToForm(dp: DirectoryProvider): Omit<MedicalProvider, 'id'> {
+  return {
+    name: dp.name,
+    type: dp.type,
+    address: dp.address,
+    city: dp.city,
+    state: dp.state,
+    zip: dp.zip,
+    phone: dp.phone,
+    fax: dp.fax,
+    contactPerson: dp.contact_person,
+    totalCost: undefined,
+    notes: dp.notes,
+    dateOfFirstVisit: '',
+    dateOfLastVisit: '',
+    isCurrentlyTreating: false,
+  };
+}
+
 export const MedicalTreatment: React.FC<MedicalTreatmentProps> = ({ caseData, onUpdateCase }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -65,19 +85,63 @@ export const MedicalTreatment: React.FC<MedicalTreatmentProps> = ({ caseData, on
   const [linkingDocProviderId, setLinkingDocProviderId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<DirectoryProvider[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [selectedFromDirectory, setSelectedFromDirectory] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
   const providers = caseData.medicalProviders || [];
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSearchResults(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    setForm(prev => ({ ...prev, name: query }));
+    setSelectedFromDirectory(false);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (query.length < 2) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    setSearching(true);
+    debounceRef.current = setTimeout(async () => {
+      const results = await searchProviders(query);
+      setSearchResults(results);
+      setShowSearchResults(results.length > 0);
+      setSearching(false);
+    }, 300);
+  }, []);
+
+  const handleSelectFromDirectory = (dp: DirectoryProvider) => {
+    const populated = directoryToForm(dp);
+    setForm(populated);
+    setSearchQuery(dp.name);
+    setShowSearchResults(false);
+    setSelectedFromDirectory(true);
+  };
 
   const getLinkedDocs = (providerId: string): DocumentAttachment[] => {
     return caseData.documents.filter(d => d.linkedFacilityId === providerId);
   };
 
-  const getUnlinkedDocs = (): DocumentAttachment[] => {
-    return caseData.documents.filter(d => !d.linkedFacilityId);
-  };
-
   const totalMedicalCosts = providers.reduce((sum, p) => sum + (p.totalCost || 0), 0);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const newProvider: MedicalProvider = {
       ...form,
       id: `mp-${Date.now()}`,
@@ -87,12 +151,28 @@ export const MedicalTreatment: React.FC<MedicalTreatmentProps> = ({ caseData, on
       medicalProviders: [...providers, newProvider],
     };
     onUpdateCase(updated);
+
+    saveProviderToDirectory({
+      name: form.name,
+      type: form.type,
+      address: form.address,
+      city: form.city,
+      state: form.state,
+      zip: form.zip,
+      phone: form.phone,
+      fax: form.fax,
+      contact_person: form.contactPerson,
+      notes: form.notes,
+    });
+
     setForm(emptyProvider);
+    setSearchQuery('');
+    setSelectedFromDirectory(false);
     setShowAddForm(false);
     setExpandedId(newProvider.id);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingId) return;
     const updated = {
       ...caseData,
@@ -101,8 +181,24 @@ export const MedicalTreatment: React.FC<MedicalTreatmentProps> = ({ caseData, on
       ),
     };
     onUpdateCase(updated);
+
+    saveProviderToDirectory({
+      name: form.name,
+      type: form.type,
+      address: form.address,
+      city: form.city,
+      state: form.state,
+      zip: form.zip,
+      phone: form.phone,
+      fax: form.fax,
+      contact_person: form.contactPerson,
+      notes: form.notes,
+    });
+
     setEditingId(null);
     setForm(emptyProvider);
+    setSearchQuery('');
+    setSelectedFromDirectory(false);
   };
 
   const handleDelete = (id: string) => {
@@ -123,6 +219,8 @@ export const MedicalTreatment: React.FC<MedicalTreatmentProps> = ({ caseData, on
     setEditingId(provider.id);
     const { id, ...rest } = provider;
     setForm(rest);
+    setSearchQuery(rest.name);
+    setSelectedFromDirectory(false);
     setShowAddForm(false);
   };
 
@@ -146,7 +244,7 @@ export const MedicalTreatment: React.FC<MedicalTreatmentProps> = ({ caseData, on
       <div className="flex items-center justify-between mb-2">
         <h4 className="font-bold text-slate-800">{isNew ? 'Add Medical Provider' : 'Edit Provider'}</h4>
         <button
-          onClick={() => { isNew ? setShowAddForm(false) : setEditingId(null); setForm(emptyProvider); }}
+          onClick={() => { isNew ? setShowAddForm(false) : setEditingId(null); setForm(emptyProvider); setSearchQuery(''); setSelectedFromDirectory(false); }}
           className="text-slate-400 hover:text-slate-600"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -154,9 +252,64 @@ export const MedicalTreatment: React.FC<MedicalTreatmentProps> = ({ caseData, on
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 relative" ref={searchRef}>
           <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Facility Name</label>
-          <input className={inputClass} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Northwestern Memorial Hospital" />
+          <div className="relative">
+            <input
+              className={inputClass}
+              value={isNew ? searchQuery : form.name}
+              onChange={e => {
+                if (isNew) {
+                  handleSearch(e.target.value);
+                } else {
+                  setForm({ ...form, name: e.target.value });
+                }
+              }}
+              onFocus={() => { if (isNew && searchResults.length > 0) setShowSearchResults(true); }}
+              placeholder="Start typing to search existing providers..."
+            />
+            {searching && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
+          {isNew && showSearchResults && searchResults.length > 0 && (
+            <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+              <div className="px-3 py-2 border-b border-slate-100">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Existing Providers</p>
+              </div>
+              {searchResults.map(dp => (
+                <button
+                  key={dp.id}
+                  onClick={() => handleSelectFromDirectory(dp)}
+                  className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-slate-50 last:border-0"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm font-medium text-slate-900">{dp.name}</span>
+                      <span className={`ml-2 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full border ${PROVIDER_TYPE_COLORS[dp.type] || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                        {PROVIDER_TYPE_LABELS[dp.type] || dp.type}
+                      </span>
+                    </div>
+                    <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  </div>
+                  {(dp.address || dp.city || dp.phone) && (
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {[dp.address, dp.city, dp.state].filter(Boolean).join(', ')}
+                      {dp.phone ? ` - ${dp.phone}` : ''}
+                    </p>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+          {isNew && selectedFromDirectory && (
+            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              Auto-filled from provider directory
+            </div>
+          )}
         </div>
         <div>
           <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Provider Type</label>
@@ -244,7 +397,7 @@ export const MedicalTreatment: React.FC<MedicalTreatmentProps> = ({ caseData, on
 
       <div className="flex justify-end gap-3 pt-2">
         <button
-          onClick={() => { isNew ? setShowAddForm(false) : setEditingId(null); setForm(emptyProvider); }}
+          onClick={() => { isNew ? setShowAddForm(false) : setEditingId(null); setForm(emptyProvider); setSearchQuery(''); setSelectedFromDirectory(false); }}
           className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
         >
           Cancel
@@ -283,7 +436,7 @@ export const MedicalTreatment: React.FC<MedicalTreatmentProps> = ({ caseData, on
         renderProviderForm(true)
       ) : (
         <button
-          onClick={() => { setForm(emptyProvider); setShowAddForm(true); }}
+          onClick={() => { setForm(emptyProvider); setSearchQuery(''); setSelectedFromDirectory(false); setShowAddForm(true); }}
           className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-sm font-bold text-slate-500 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50/50 transition-all"
         >
           + Add Medical Provider
@@ -426,7 +579,7 @@ export const MedicalTreatment: React.FC<MedicalTreatmentProps> = ({ caseData, on
                     {linkingDocProviderId === provider.id && (
                       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-3 animate-fade-in">
                         <p className="text-xs font-bold text-blue-700 mb-2">Select a document to tag to this facility:</p>
-                        {getUnlinkedDocs().length > 0 ? (
+                        {caseData.documents.length > 0 ? (
                           <div className="space-y-1 max-h-40 overflow-y-auto">
                             {caseData.documents.map((doc, idx) => {
                               const alreadyLinked = doc.linkedFacilityId === provider.id;
@@ -456,7 +609,7 @@ export const MedicalTreatment: React.FC<MedicalTreatmentProps> = ({ caseData, on
                             })}
                           </div>
                         ) : (
-                          <p className="text-sm text-blue-600">No unlinked documents available. Upload documents in the Documents tab first.</p>
+                          <p className="text-sm text-blue-600">No documents available. Upload documents in the Documents tab first.</p>
                         )}
                       </div>
                     )}
