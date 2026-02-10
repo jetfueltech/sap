@@ -335,4 +335,7 @@ export interface CaseFile {
   
   // Internal Chat
   chatHistory?: ChatMessage[];
+
+  // Team Notes
+  notes?: string;
 }
