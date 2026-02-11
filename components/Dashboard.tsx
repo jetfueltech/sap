@@ -225,13 +225,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ cases, onSelectCase, onOpe
       {viewMode === 'table' ? (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col shadow-sm">
              <div className="overflow-x-auto w-full">
-                <div className="min-w-[1200px] pb-12">
+                <div className="min-w-[1300px] pb-12">
                     {/* Header Row */}
-                    <div className="grid grid-cols-[140px_180px_110px_2fr_1fr_1fr_1fr_60px] gap-4 px-6 py-4 bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <div className="grid grid-cols-[140px_180px_100px_120px_2fr_1fr_1fr_1fr_60px] gap-4 px-6 py-4 bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-wider">
                         <div>Status</div>
                         <div>Client Name</div>
-                        <div 
-                            className="flex items-center cursor-pointer group hover:text-indigo-600 transition-colors select-none" 
+                        <div
+                            className="flex items-center cursor-pointer group hover:text-indigo-600 transition-colors select-none"
                             onClick={() => handleSort('accidentDate')}
                         >
                             DOL
@@ -239,6 +239,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ cases, onSelectCase, onOpe
                                 <svg className={`w-2 h-2 ${sortConfig?.key === 'accidentDate' && sortConfig.direction === 'asc' ? 'text-indigo-600' : 'text-slate-300'}`} fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l-8 8h16l-8-8z" /></svg>
                                 <svg className={`w-2 h-2 -mt-0.5 ${sortConfig?.key === 'accidentDate' && sortConfig.direction === 'desc' ? 'text-indigo-600' : 'text-slate-300'}`} fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l8-8H4l8 8z" /></svg>
                             </div>
+                        </div>
+                        <div className="flex items-center">
+                            SOL Deadline
+                            <svg className="w-3 h-3 ml-1 text-rose-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
                         </div>
                         <div>Description</div>
                         <div>Impact</div>
@@ -263,11 +267,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ cases, onSelectCase, onOpe
                     ) : (
                         <div className="divide-y divide-slate-100">
                             {sortedCases.map((c) => (
-                                <div key={c.id} className="grid grid-cols-[140px_180px_110px_2fr_1fr_1fr_1fr_60px] gap-4 px-6 py-4 items-center hover:bg-slate-50 transition-colors group cursor-pointer relative" onClick={() => onSelectCase(c)}>
-                                    
+                                <div key={c.id} className="grid grid-cols-[140px_180px_100px_120px_2fr_1fr_1fr_1fr_60px] gap-4 px-6 py-4 items-center hover:bg-slate-50 transition-colors group cursor-pointer relative" onClick={() => onSelectCase(c)}>
+
                                     {/* Status - Interactive */}
                                     <div className="relative">
-                                        <button 
+                                        <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setEditingStatusId(editingStatusId === c.id ? null : c.id);
@@ -277,14 +281,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ cases, onSelectCase, onOpe
                                             {c.status === CaseStatus.INTAKE_PROCESSING ? 'Processing' : c.status.replace(/_/g, ' ')}
                                             <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                         </button>
-                                        
+
                                         {/* Status Dropdown */}
                                         {editingStatusId === c.id && (
                                             <div ref={statusMenuRef} className="absolute top-8 left-0 z-50 bg-white border border-slate-200 shadow-xl rounded-xl w-48 py-1 animate-fade-in" onClick={(e) => e.stopPropagation()}>
                                                 <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 bg-slate-50">Update Status</div>
                                                 <div className="max-h-60 overflow-y-auto">
                                                     {Object.values(CaseStatus).map((status) => (
-                                                        <button 
+                                                        <button
                                                             key={status}
                                                             onClick={() => handleStatusUpdate(c, status)}
                                                             className={`w-full text-left px-4 py-2 text-xs font-medium hover:bg-slate-50 flex items-center ${c.status === status ? 'text-indigo-600 bg-indigo-50' : 'text-slate-700'}`}
@@ -308,7 +312,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ cases, onSelectCase, onOpe
                                     <div>
                                         <div className="text-xs text-slate-500 font-medium">{new Date(c.accidentDate).toLocaleDateString()}</div>
                                     </div>
-                                    
+
+                                    {/* Statute of Limitations */}
+                                    <div>
+                                        {c.statuteOfLimitationsDate ? (() => {
+                                            const solDate = new Date(c.statuteOfLimitationsDate);
+                                            const today = new Date();
+                                            const daysRemaining = Math.floor((solDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                                            const isCritical = daysRemaining < 30;
+                                            const isUrgent = daysRemaining < 90;
+
+                                            return (
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className={`text-[11px] font-bold ${
+                                                        isCritical ? 'text-rose-600' :
+                                                        isUrgent ? 'text-amber-600' :
+                                                        'text-slate-600'
+                                                    }`}>
+                                                        {solDate.toLocaleDateString()}
+                                                    </span>
+                                                    <span className={`text-[10px] font-medium ${
+                                                        isCritical ? 'text-rose-500' :
+                                                        isUrgent ? 'text-amber-500' :
+                                                        'text-slate-400'
+                                                    }`}>
+                                                        {daysRemaining > 0 ? `${daysRemaining}d left` : 'EXPIRED'}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })() : (
+                                            <span className="text-[10px] text-rose-500 font-bold">NOT SET</span>
+                                        )}
+                                    </div>
+
                                     {/* Description */}
                                     <div>
                                         <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed" title={c.description}>{c.description}</p>
@@ -381,7 +417,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ cases, onSelectCase, onOpe
                                         <h4 className="font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors pointer-events-none">{c.clientName}</h4>
                                         <span className="text-[10px] font-medium text-slate-400 pointer-events-none">{new Date(c.accidentDate).toLocaleDateString(undefined, { month:'numeric', day:'numeric'})}</span>
                                     </div>
-                                    <p className="text-xs text-slate-500 line-clamp-2 mb-3 pointer-events-none">{c.description}</p>
+                                    <p className="text-xs text-slate-500 line-clamp-2 mb-2 pointer-events-none">{c.description}</p>
+
+                                    {/* Statute of Limitations */}
+                                    {c.statuteOfLimitationsDate ? (() => {
+                                        const solDate = new Date(c.statuteOfLimitationsDate);
+                                        const today = new Date();
+                                        const daysRemaining = Math.floor((solDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                                        const isCritical = daysRemaining < 30;
+                                        const isUrgent = daysRemaining < 90;
+
+                                        return (
+                                            <div className={`mb-3 px-2 py-1 rounded text-[10px] font-bold pointer-events-none ${
+                                                isCritical ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                                                isUrgent ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                                                'bg-slate-50 text-slate-600 border border-slate-200'
+                                            }`}>
+                                                SOL: {solDate.toLocaleDateString(undefined, { month:'short', day:'numeric', year:'2-digit'})} ({daysRemaining > 0 ? `${daysRemaining}d` : 'EXPIRED'})
+                                            </div>
+                                        );
+                                    })() : (
+                                        <div className="mb-3 px-2 py-1 rounded text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200 pointer-events-none">
+                                            SOL: NOT SET
+                                        </div>
+                                    )}
+
                                     <div className="flex items-center justify-between pointer-events-none">
                                         <div className="flex gap-1">
                                             {c.impact && (

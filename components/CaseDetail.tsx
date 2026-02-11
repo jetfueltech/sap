@@ -777,6 +777,51 @@ export const CaseDetail: React.FC<CaseDetailProps> = ({ caseData, onBack, onUpda
                                           {isEditing ? <input type="date" className={inputClass} value={editForm.accidentDate} onChange={e => setEditForm({...editForm, accidentDate: e.target.value})} /> : <p className="text-base font-medium text-slate-900">{caseData.accidentDate}</p>}
                                       </div>
                                       <div>
+                                          <label className="block text-xs font-bold text-slate-400 uppercase mb-1 flex items-center">
+                                              Statute of Limitations
+                                              <svg className="w-3 h-3 ml-1 text-rose-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                                          </label>
+                                          {isEditing ? (
+                                              <input
+                                                  type="date"
+                                                  className={inputClass}
+                                                  value={editForm.statuteOfLimitationsDate || ''}
+                                                  onChange={e => setEditForm({...editForm, statuteOfLimitationsDate: e.target.value})}
+                                              />
+                                          ) : (
+                                              caseData.statuteOfLimitationsDate ? (
+                                                  (() => {
+                                                      const solDate = new Date(caseData.statuteOfLimitationsDate);
+                                                      const today = new Date();
+                                                      const daysRemaining = Math.floor((solDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                                                      const isUrgent = daysRemaining < 90;
+                                                      const isCritical = daysRemaining < 30;
+
+                                                      return (
+                                                          <div className="flex items-center gap-2">
+                                                              <span className={`inline-block px-3 py-1.5 rounded-lg border text-sm font-bold ${
+                                                                  isCritical ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                                                                  isUrgent ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                                                  'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                                              }`}>
+                                                                  {new Date(caseData.statuteOfLimitationsDate).toLocaleDateString()}
+                                                              </span>
+                                                              <span className={`text-xs font-medium ${
+                                                                  isCritical ? 'text-rose-600' :
+                                                                  isUrgent ? 'text-amber-600' :
+                                                                  'text-slate-500'
+                                                              }`}>
+                                                                  ({daysRemaining > 0 ? `${daysRemaining} days remaining` : 'EXPIRED'})
+                                                              </span>
+                                                          </div>
+                                                      );
+                                                  })()
+                                              ) : (
+                                                  <span className="text-rose-500 text-sm italic font-medium">Not Set - Set Immediately</span>
+                                              )
+                                          )}
+                                      </div>
+                                      <div>
                                           <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Location</label>
                                           {isEditing ? <input className={inputClass} value={editForm.location} onChange={e => setEditForm({...editForm, location: e.target.value})} /> : <p className="text-base font-medium text-slate-900">{caseData.location || 'N/A'}</p>}
                                       </div>

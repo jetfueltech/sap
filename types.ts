@@ -297,6 +297,7 @@ export interface CaseFile {
   location?: string;
   description: string; // Facts of loss
   impact?: string; // New field for impact summary e.g. "High PD - HP"
+  statuteOfLimitationsDate?: string; // Deadline date based on date of loss
   
   // Auto Specific (Quick View)
   vehicleInfo?: VehicleInfo;
