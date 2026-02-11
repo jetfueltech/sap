@@ -94,6 +94,11 @@ export const NewIntakeModal: React.FC<NewIntakeModalProps> = ({ isOpen, onClose,
           });
       }
 
+      const accidentDate = incidentInfo.date || new Date().toISOString().split('T')[0];
+      const solDate = new Date(accidentDate);
+      solDate.setFullYear(solDate.getFullYear() + 2);
+      const statuteOfLimitationsDate = solDate.toISOString().split('T')[0];
+
       const newCase: CaseFile = {
         id: Math.random().toString(36).substr(2, 9),
         clientName: clientInfo.name || 'Unknown Client',
@@ -101,10 +106,11 @@ export const NewIntakeModal: React.FC<NewIntakeModalProps> = ({ isOpen, onClose,
         clientAddress: clientInfo.address,
         clientEmail: clientInfo.email || 'no-email@example.com',
         clientPhone: clientInfo.phone || '555-0000',
-        
-        accidentDate: incidentInfo.date || new Date().toISOString().split('T')[0],
+
+        accidentDate: accidentDate,
         location: incidentInfo.location,
         description: incidentInfo.description || 'No description provided.',
+        statuteOfLimitationsDate: statuteOfLimitationsDate,
         
         vehicleInfo: {
           year: incidentInfo.vehYear,
