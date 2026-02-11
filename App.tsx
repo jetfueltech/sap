@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { CaseDetail } from './components/CaseDetail';
@@ -421,6 +421,21 @@ export default function App() {
     },
     ...ADDITIONAL_CASES
   ]);
+
+  useEffect(() => {
+    const updatedCases = cases.map(c => {
+      if (!c.statuteOfLimitationsDate && c.accidentDate) {
+        const solDate = new Date(c.accidentDate);
+        solDate.setFullYear(solDate.getFullYear() + 2);
+        return { ...c, statuteOfLimitationsDate: solDate.toISOString().split('T')[0] };
+      }
+      return c;
+    });
+
+    if (JSON.stringify(updatedCases) !== JSON.stringify(cases)) {
+      setCases(updatedCases);
+    }
+  }, []);
 
   const handleCaseUpdate = (updatedCase: CaseFile) => {
     setCases(cases.map(c => c.id === updatedCase.id ? updatedCase : c));
