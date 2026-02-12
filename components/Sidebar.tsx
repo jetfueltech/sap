@@ -5,13 +5,15 @@ interface SidebarProps {
   currentView: string;
   setCurrentView: (view: string) => void;
   caseCount: number;
+  taskCount?: number;
   isCollapsed: boolean;
   toggleSidebar: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, caseCount, isCollapsed, toggleSidebar }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, caseCount, taskCount = 0, isCollapsed, toggleSidebar }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
+    { id: 'tasks', label: 'Tasks', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
     { id: 'inbox', label: 'Inbox', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
     { id: 'directory', label: 'Directory', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
     { id: 'analytics', label: 'Analytics', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
@@ -62,11 +64,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, c
                 {caseCount}
               </span>
             )}
+            {item.id === 'tasks' && taskCount > 0 && !isCollapsed && (
+                <span className="ml-auto bg-rose-500 text-xs font-bold px-2 py-0.5 rounded-full text-white">
+                  {taskCount}
+                </span>
+            )}
             {item.id === 'inbox' && !isCollapsed && (
                 <span className="ml-auto bg-red-500 text-xs font-bold px-2 py-0.5 rounded-full text-white">3</span>
             )}
-            {(item.id === 'dashboard' || item.id === 'inbox') && isCollapsed && (
-               <div className={`absolute top-2 right-2 w-2 h-2 rounded-full ${item.id === 'inbox' ? 'bg-red-500' : 'bg-blue-500'}`}></div>
+            {(item.id === 'dashboard' || item.id === 'inbox' || item.id === 'tasks') && isCollapsed && (
+               <div className={`absolute top-2 right-2 w-2 h-2 rounded-full ${item.id === 'inbox' ? 'bg-red-500' : item.id === 'tasks' ? 'bg-rose-500' : 'bg-blue-500'}`}></div>
             )}
           </button>
         ))}

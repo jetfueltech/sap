@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { CaseFile, MedicalProvider, MedicalProviderType, DocumentAttachment } from '../types';
+import { CaseFile, MedicalProvider, MedicalProviderType, DocumentAttachment, PreferredContactMethod } from '../types';
 import { searchProviders, saveProviderToDirectory, DirectoryProvider } from '../services/medicalProviderService';
 
 interface MedicalTreatmentProps {
@@ -37,6 +37,13 @@ const PROVIDER_TYPE_COLORS: Record<MedicalProviderType, string> = {
   other: 'bg-stone-50 text-stone-700 border-stone-200',
 };
 
+const CONTACT_METHOD_LABELS: Record<PreferredContactMethod, string> = {
+  email: 'Email',
+  fax: 'Fax',
+  mail: 'Mail',
+  phone: 'Phone',
+};
+
 const emptyProvider: Omit<MedicalProvider, 'id'> = {
   name: '',
   type: 'hospital',
@@ -46,12 +53,14 @@ const emptyProvider: Omit<MedicalProvider, 'id'> = {
   zip: '',
   phone: '',
   fax: '',
+  email: '',
   contactPerson: '',
   totalCost: undefined,
   notes: '',
   dateOfFirstVisit: '',
   dateOfLastVisit: '',
   isCurrentlyTreating: false,
+  preferredContactMethod: undefined,
 };
 
 function formatCurrency(val: number | undefined): string {
@@ -344,7 +353,7 @@ export const MedicalTreatment: React.FC<MedicalTreatmentProps> = ({ caseData, on
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Phone</label>
           <input className={inputClass} value={form.phone || ''} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="(312) 555-0000" />
@@ -352,6 +361,22 @@ export const MedicalTreatment: React.FC<MedicalTreatmentProps> = ({ caseData, on
         <div>
           <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Fax</label>
           <input className={inputClass} value={form.fax || ''} onChange={e => setForm({ ...form, fax: e.target.value })} placeholder="(312) 555-0001" />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Email</label>
+          <input className={inputClass} value={form.email || ''} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="records@hospital.com" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Preferred Contact Method</label>
+          <select className={inputClass} value={form.preferredContactMethod || ''} onChange={e => setForm({ ...form, preferredContactMethod: (e.target.value || undefined) as PreferredContactMethod | undefined })}>
+            <option value="">Not specified</option>
+            {Object.entries(CONTACT_METHOD_LABELS).map(([val, label]) => (
+              <option key={val} value={val}>{label}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -525,8 +550,18 @@ export const MedicalTreatment: React.FC<MedicalTreatmentProps> = ({ caseData, on
                           <span className="text-sm font-medium text-slate-900">{provider.fax || '--'}</span>
                         </div>
                         <div className="flex justify-between">
+                          <span className="text-sm text-slate-500">Email</span>
+                          <span className="text-sm font-medium text-slate-900">{provider.email || '--'}</span>
+                        </div>
+                        <div className="flex justify-between">
                           <span className="text-sm text-slate-500">Contact</span>
                           <span className="text-sm font-medium text-slate-900">{provider.contactPerson || '--'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-slate-500">Preferred Method</span>
+                          <span className={`text-sm font-bold ${provider.preferredContactMethod ? 'text-blue-600' : 'text-slate-400'}`}>
+                            {provider.preferredContactMethod ? CONTACT_METHOD_LABELS[provider.preferredContactMethod] : '--'}
+                          </span>
                         </div>
                       </div>
                     </div>

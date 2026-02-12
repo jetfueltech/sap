@@ -6,7 +6,7 @@ interface DocumentGeneratorProps {
   isOpen: boolean;
   onClose: () => void;
   caseData: CaseFile;
-  formType: 'rep_lien' | 'foia' | 'intake_summary' | null;
+  formType: 'rep_lien' | 'foia' | 'intake_summary' | 'boss_intake_form' | null;
 }
 
 export const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({ isOpen, onClose, caseData, formType }) => {
@@ -471,6 +471,123 @@ export const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({ isOpen, on
       </div>
   );
 
+  const renderBossIntakeForm = () => {
+    const clientIns = caseData.insurance?.find(i => i.type === 'Client');
+    const defIns = caseData.insurance?.find(i => i.type === 'Defendant');
+    const providers = caseData.medicalProviders || [];
+    const erVisits = caseData.erVisits || [];
+    return (
+      <div className={paperClass}>
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold text-red-800 font-serif tracking-wide mb-1">SAP LAW</h1>
+          <h2 className="text-lg font-bold uppercase border-b-2 border-black pb-2">CLIENT INTAKE FORM</h2>
+        </div>
+
+        <div className="mb-6 border border-black">
+          <div className="bg-gray-100 text-center font-bold border-b border-black py-1">Client Information</div>
+          <div className="p-3 text-sm space-y-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div>Client Name: <span className="border-b border-black font-bold px-1 bg-yellow-100">{caseData.clientName}</span></div>
+              <div>DOB: <span className="border-b border-black px-1">{caseData.clientDob || intake.client?.date_of_birth || '___________'}</span></div>
+            </div>
+            <div>Phone: <span className="border-b border-black px-1">{caseData.clientPhone}</span></div>
+            <div>Email: <span className="border-b border-black px-1">{caseData.clientEmail}</span></div>
+            <div>Address: <span className="border-b border-black px-1">{caseData.clientAddress || [intake.client?.address?.street, intake.client?.address?.city, intake.client?.address?.state, intake.client?.address?.zip].filter(Boolean).join(', ') || '___________'}</span></div>
+          </div>
+        </div>
+
+        <div className="mb-6 border border-black">
+          <div className="bg-gray-100 text-center font-bold border-b border-black py-1">Accident Information</div>
+          <div className="p-3 text-sm space-y-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div>Date of Loss: <span className="border-b border-black font-bold px-1 bg-yellow-100">{caseData.accidentDate}</span></div>
+              <div>Location: <span className="border-b border-black px-1">{caseData.location || intake.accident?.accident_location || '___________'}</span></div>
+            </div>
+            <div>Crash Report #: <span className="border-b border-black px-1">{intake.accident?.crash_report_number || '___________'}</span></div>
+            <div>Facts: <span className="border-b border-black px-1">{caseData.description || intake.accident?.accident_facts || '___________'}</span></div>
+            <div>Impact: <span className="border-b border-black px-1">{caseData.impact || '___________'}</span></div>
+          </div>
+        </div>
+
+        <div className="mb-6 border border-black">
+          <div className="bg-gray-100 text-center font-bold border-b border-black py-1">Insurance Information</div>
+          <div className="p-3 text-sm space-y-2">
+            <div className="font-bold border-b border-dotted border-gray-400 pb-1 mb-2">Client Insurance</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>Company: <span className="border-b border-black px-1">{clientIns?.provider || intake.auto_insurance?.driver_or_passenger_insurance_company || '___________'}</span></div>
+              <div>Policy #: <span className="border-b border-black px-1">{clientIns?.policyNumber || '___________'}</span></div>
+            </div>
+            <div className="font-bold border-b border-dotted border-gray-400 pb-1 mb-2 mt-3">Defendant Insurance</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>Company: <span className="border-b border-black font-bold px-1">{defIns?.provider || defInsurer}</span></div>
+              <div>Claim #: <span className="border-b border-black px-1">{defIns?.claimNumber || claimNo}</span></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>Adjuster: <span className="border-b border-black px-1">{defIns?.adjuster || '___________'}</span></div>
+              <div>Coverage Limits: <span className="border-b border-black px-1">{defIns?.policyLimitsAmount || defIns?.coverageLimits || '___________'}</span></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>Coverage: <span className="border-b border-black px-1">{defIns?.coverageStatus || 'Pending'}</span></div>
+              <div>Liability: <span className="border-b border-black px-1">{defIns?.liabilityStatus || 'Pending'}</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-6 border border-black">
+          <div className="bg-gray-100 text-center font-bold border-b border-black py-1">Defendant Information</div>
+          <div className="p-3 text-sm space-y-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div>Name: <span className="border-b border-black font-bold px-1">{defName}</span></div>
+              <div>Phone: <span className="border-b border-black px-1">{intake.defendant?.phone || '___________'}</span></div>
+            </div>
+            <div>Vehicle: <span className="border-b border-black px-1">{intake.defendant?.vehicle ? `${intake.defendant.vehicle.year} ${intake.defendant.vehicle.make} ${intake.defendant.vehicle.model}` : '___________'}</span></div>
+          </div>
+        </div>
+
+        <div className="mb-6 border border-black">
+          <div className="bg-gray-100 text-center font-bold border-b border-black py-1">Medical Treatment</div>
+          <div className="p-3 text-sm space-y-2">
+            <div>Treatment Status: <span className="border-b border-black px-1">{caseData.treatmentStatus || 'Active'}</span></div>
+            <div>MRI Completed: <span className="border-b border-black px-1">{caseData.mriCompleted ? `Yes (${caseData.mriCompletedDate || ''})` : 'No'}</span></div>
+            <table className="w-full border border-black text-xs mt-2">
+              <thead><tr className="bg-gray-50"><th className="border border-black p-1">Provider</th><th className="border border-black p-1">Type</th><th className="border border-black p-1">Phone</th><th className="border border-black p-1">Cost</th></tr></thead>
+              <tbody>
+                {providers.map((p, i) => (
+                  <tr key={i}>
+                    <td className="border border-black p-1 font-bold">{p.name}</td>
+                    <td className="border border-black p-1">{p.type}</td>
+                    <td className="border border-black p-1">{p.phone || '--'}</td>
+                    <td className="border border-black p-1">{p.totalCost ? `$${p.totalCost.toLocaleString()}` : '--'}</td>
+                  </tr>
+                ))}
+                {providers.length === 0 && <tr><td colSpan={4} className="p-1 text-center italic">None listed</td></tr>}
+              </tbody>
+            </table>
+            {erVisits.length > 0 && (
+              <div className="mt-2">
+                <div className="font-bold text-xs">ER Visits:</div>
+                {erVisits.map((v, i) => (
+                  <div key={i} className="text-xs ml-2">- {v.facilityName} ({v.visitDate}) | Bills: {v.bills.filter(b => b.status === 'received').length}/3 received</div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mb-6 border border-black">
+          <div className="bg-gray-100 text-center font-bold border-b border-black py-1">Referral & Notes</div>
+          <div className="p-3 text-sm space-y-2">
+            <div>Referral Source: <span className="border-b border-black px-1">{caseData.referralSource}</span></div>
+            <div>SOL Date: <span className="border-b border-black px-1 font-bold text-red-800">{caseData.statuteOfLimitationsDate || '___________'}</span></div>
+            <div>Notes: <span className="border-b border-black px-1">{caseData.notes || '___________'}</span></div>
+          </div>
+        </div>
+
+        <div className="text-xs text-gray-400 text-center mt-8">Generated {today} | {attorneyFirm} | Auto-populated from case data</div>
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in">
         <div className="bg-slate-200 w-full max-w-6xl h-[95vh] rounded-xl flex flex-col shadow-2xl overflow-hidden">
@@ -497,6 +614,7 @@ export const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({ isOpen, on
                 {formType === 'rep_lien' && renderRepAndLien()}
                 {formType === 'foia' && renderFOIA()}
                 {formType === 'intake_summary' && renderIntakeSummary()}
+                {formType === 'boss_intake_form' && renderBossIntakeForm()}
             </div>
         </div>
     </div>

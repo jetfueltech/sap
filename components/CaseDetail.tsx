@@ -1,9 +1,14 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { CaseFile, CaseStatus, DocumentAttachment, DocumentType, Insurance, ActivityLog, ExtendedIntakeData, Email, CommunicationLog, ChatMessage } from '../types';
+import { CaseFile, CaseStatus, DocumentAttachment, DocumentType, Insurance, ActivityLog, ExtendedIntakeData, Email, CommunicationLog, ChatMessage, DOCUMENT_NAMING_RULES, PhotoCategory, PHOTO_CATEGORY_LABELS } from '../types';
 import { analyzeIntakeCase } from '../services/geminiService';
 import { ExtendedIntakeForm } from './ExtendedIntakeForm';
 import { MedicalTreatment } from './MedicalTreatment';
+import { CoverageTracker } from './CoverageTracker';
+import { ERBillTracker } from './ERBillTracker';
+import { DemandReadiness } from './DemandReadiness';
+import { SpecialsTracker } from './SpecialsTracker';
+import { CaseTasksPanel } from './CaseTasksPanel';
 
 interface CaseDetailProps {
   caseData: CaseFile;
@@ -20,7 +25,7 @@ interface PendingUpload {
 }
 
 export const CaseDetail: React.FC<CaseDetailProps> = ({ caseData, onBack, onUpdateCase }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'extended' | 'medical' | 'documents' | 'ai_analysis' | 'activity_log'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'extended' | 'medical' | 'documents' | 'ai_analysis' | 'activity_log' | 'coverage' | 'er_records' | 'demand' | 'tasks' | 'specials'>('overview');
   const [analyzing, setAnalyzing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   
@@ -554,6 +559,35 @@ export const CaseDetail: React.FC<CaseDetailProps> = ({ caseData, onBack, onUpda
                  AI Analysis
                  {activeTab === 'ai_analysis' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></div>}
              </button>
+             <button onClick={() => setActiveTab('coverage')} className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'coverage' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>
+                 Coverage & Limits
+                 {(caseData.insurance || []).some(i => i.type === 'Defendant' && (!i.coverageStatus || i.coverageStatus === 'pending')) && (
+                   <span className="ml-1.5 w-2 h-2 bg-amber-400 rounded-full inline-block"></span>
+                 )}
+                 {activeTab === 'coverage' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></div>}
+             </button>
+             <button onClick={() => setActiveTab('er_records')} className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'er_records' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>
+                 ER Records
+                 {(caseData.erVisits || []).length > 0 && (
+                   <span className="ml-1.5 text-[10px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full">{(caseData.erVisits || []).length}</span>
+                 )}
+                 {activeTab === 'er_records' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></div>}
+             </button>
+             <button onClick={() => setActiveTab('demand')} className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'demand' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>
+                 Demand Readiness
+                 {activeTab === 'demand' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></div>}
+             </button>
+             <button onClick={() => setActiveTab('specials')} className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'specials' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>
+                 Specials
+                 {activeTab === 'specials' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></div>}
+             </button>
+             <button onClick={() => setActiveTab('tasks')} className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'tasks' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>
+                 Tasks
+                 {(caseData.tasks || []).filter(t => t.status !== 'completed').length > 0 && (
+                   <span className="ml-1.5 text-[10px] font-bold bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded-full">{(caseData.tasks || []).filter(t => t.status !== 'completed').length}</span>
+                 )}
+                 {activeTab === 'tasks' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></div>}
+             </button>
              <button onClick={() => setActiveTab('activity_log')} className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'activity_log' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>
                  Activity Log
                  {activeTab === 'activity_log' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></div>}
@@ -564,6 +598,16 @@ export const CaseDetail: React.FC<CaseDetailProps> = ({ caseData, onBack, onUpda
       {/* 2. Content Area */}
       {activeTab === 'extended' ? (
           <div className="animate-fade-in"><ExtendedIntakeForm caseData={caseData} onSave={handleExtendedIntakeSave} /></div>
+      ) : activeTab === 'coverage' ? (
+          <div className="animate-fade-in"><CoverageTracker caseData={caseData} onUpdateCase={onUpdateCase} /></div>
+      ) : activeTab === 'er_records' ? (
+          <div className="animate-fade-in"><ERBillTracker caseData={caseData} onUpdateCase={onUpdateCase} /></div>
+      ) : activeTab === 'demand' ? (
+          <div className="animate-fade-in"><DemandReadiness caseData={caseData} /></div>
+      ) : activeTab === 'specials' ? (
+          <div className="animate-fade-in"><SpecialsTracker caseData={caseData} onUpdateCase={onUpdateCase} /></div>
+      ) : activeTab === 'tasks' ? (
+          <div className="animate-fade-in"><CaseTasksPanel caseData={caseData} onUpdateCase={onUpdateCase} /></div>
       ) : activeTab === 'medical' ? (
           <div className="animate-fade-in"><MedicalTreatment caseData={caseData} onUpdateCase={onUpdateCase} /></div>
       ) : activeTab === 'documents' ? (

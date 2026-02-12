@@ -86,6 +86,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ cases, onSelectCase, onOpe
       return 'Pending';
   };
 
+  const getCaseAlerts = (c: CaseFile) => {
+      const alerts: { label: string; color: string }[] = [];
+      const defIns = (c.insurance || []).find(i => i.type === 'Defendant');
+      if (defIns?.coverageStatus === 'pending') alerts.push({ label: 'Cov', color: 'bg-amber-100 text-amber-700 border-amber-200' });
+      if (defIns?.liabilityStatus === 'pending' || defIns?.liabilityStatus === 'disputed') alerts.push({ label: 'Liab', color: 'bg-rose-100 text-rose-700 border-rose-200' });
+      const overdueTasks = (c.tasks || []).filter(t => t.status !== 'completed' && new Date(t.dueDate) < new Date()).length;
+      if (overdueTasks > 0) alerts.push({ label: `${overdueTasks} Task${overdueTasks > 1 ? 's' : ''}`, color: 'bg-red-100 text-red-700 border-red-200' });
+      const overdueER = (c.erVisits || []).flatMap(v => v.bills).filter(b => b.status === 'requested' && b.requestDate && (Date.now() - new Date(b.requestDate).getTime()) > 30 * 24 * 60 * 60 * 1000).length;
+      if (overdueER > 0) alerts.push({ label: `ER ${overdueER}`, color: 'bg-orange-100 text-orange-700 border-orange-200' });
+      return alerts;
+  };
+
   const kanbanColumns = [
       { title: 'New / Analyzing', statuses: [CaseStatus.NEW, CaseStatus.ANALYZING], color: 'border-blue-500' },
       { title: 'Review Needed', statuses: [CaseStatus.REVIEW_NEEDED], color: 'border-amber-500' },
@@ -225,9 +237,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ cases, onSelectCase, onOpe
       {viewMode === 'table' ? (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col shadow-sm">
              <div className="overflow-x-auto w-full">
-                <div className="min-w-[1300px] pb-12">
+                <div className="min-w-[1400px] pb-12">
                     {/* Header Row */}
-                    <div className="grid grid-cols-[140px_180px_100px_120px_2fr_1fr_1fr_1fr_60px] gap-4 px-6 py-4 bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <div className="grid grid-cols-[140px_180px_100px_120px_2fr_1fr_1fr_1fr_80px_60px] gap-4 px-6 py-4 bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-wider">
                         <div>Status</div>
                         <div>Client Name</div>
                         <div
@@ -248,6 +260,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ cases, onSelectCase, onOpe
                         <div>Impact</div>
                         <div>Source</div>
                         <div>Insurance</div>
+                        <div>Alerts</div>
                         <div className="text-right">Action</div>
                     </div>
 
@@ -267,7 +280,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ cases, onSelectCase, onOpe
                     ) : (
                         <div className="divide-y divide-slate-100">
                             {sortedCases.map((c) => (
-                                <div key={c.id} className="grid grid-cols-[140px_180px_100px_120px_2fr_1fr_1fr_1fr_60px] gap-4 px-6 py-4 items-center hover:bg-slate-50 transition-colors group cursor-pointer relative" onClick={() => onSelectCase(c)}>
+                                <div key={c.id} className="grid grid-cols-[140px_180px_100px_120px_2fr_1fr_1fr_1fr_80px_60px] gap-4 px-6 py-4 items-center hover:bg-slate-50 transition-colors group cursor-pointer relative" onClick={() => onSelectCase(c)}>
 
                                     {/* Status - Interactive */}
                                     <div className="relative">
@@ -373,6 +386,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ cases, onSelectCase, onOpe
                                         </span>
                                     </div>
 
+                                    {/* Alerts */}
+                                    <div className="flex flex-wrap gap-1">
+                                        {getCaseAlerts(c).map((alert, idx) => (
+                                            <span key={idx} className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${alert.color}`}>{alert.label}</span>
+                                        ))}
+                                    </div>
+
                                     {/* Action */}
                                     <div className="text-right">
                                         <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all">
@@ -442,6 +462,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ cases, onSelectCase, onOpe
                                         </div>
                                     )}
 
+                                    {getCaseAlerts(c).length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mb-2 pointer-events-none">
+                                            {getCaseAlerts(c).map((alert, idx) => (
+                                                <span key={idx} className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${alert.color}`}>{alert.label}</span>
+                                            ))}
+                                        </div>
+                                    )}
                                     <div className="flex items-center justify-between pointer-events-none">
                                         <div className="flex gap-1">
                                             {c.impact && (

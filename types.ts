@@ -14,14 +14,81 @@ export enum CaseStatus {
 
 export type DocumentType = 'retainer' | 'crash_report' | 'medical_record' | 'authorization' | 'insurance_card' | 'photo' | 'email' | 'other';
 
+export type PhotoCategory = 'drivers_license' | 'insurance_card' | 'client_pd' | 'defendant_pd' | 'injury_photo' | 'scene_photo' | 'other';
+
+export type EmailCategory = 'offer' | 'counteroffer' | 'coverage_response' | 'liability_decision' | 'medical_records' | 'medical_bills' | 'policy_limits_response' | 'client_communication' | 'attorney_correspondence' | 'general';
+
+export type TaskType = 'coverage_followup' | 'liability_followup' | 'policy_limits' | 'er_records' | 'er_bills' | 'medical_records' | 'demand_prep' | 'general';
+
+export type TaskStatus = 'open' | 'completed' | 'overdue';
+
+export type CoverageStatusType = 'pending' | 'accepted' | 'denied' | 'under_investigation';
+export type LiabilityStatusType = 'pending' | 'accepted' | 'denied' | 'disputed';
+export type PolicyLimitsStatusType = 'not_requested' | 'requested' | 'received' | 'na';
+export type ERBillStatus = 'not_requested' | 'requested' | 'received' | 'na';
+export type PreferredContactMethod = 'email' | 'fax' | 'mail' | 'phone';
+export type SpecialsStatus = 'in_progress' | 'complete' | 'sent_to_attorney';
+
+export const DOCUMENT_NAMING_RULES: Record<string, string> = {
+  retainer: 'Retainer',
+  crash_report: 'Crash Report',
+  medical_record: 'Medical Record',
+  authorization: 'Authorization for Release',
+  insurance_card: 'Insurance Card',
+  photo: 'Photo',
+  email: 'Email',
+  foia_request: 'FOIA Request',
+  letter_of_representation: 'Letter of Representation',
+  attorney_lien: 'Attorney Lien',
+  bill_request: 'Bill Request',
+  demand_letter: 'Demand Letter',
+  distribution_sheet: 'Distribution Sheet',
+  drivers_license: "Driver's License",
+  client_pd_photo: 'Client PD Photo',
+  defendant_pd_photo: 'Defendant PD Photo',
+  mri_record: 'MRI Record',
+  mri_bill: 'MRI Bill',
+  er_facility_bill: 'ER Facility Bill',
+  er_physician_bill: 'ER Physician Bill',
+  er_radiology_bill: 'ER Radiology Bill',
+  er_facility_record: 'ER Facility Record',
+  specials_package: 'Specials Package',
+  intake_form: 'Intake Form',
+  preservation_of_evidence: 'Preservation of Evidence Request',
+};
+
+export const PHOTO_CATEGORY_LABELS: Record<PhotoCategory, string> = {
+  drivers_license: "Driver's License",
+  insurance_card: 'Insurance Card',
+  client_pd: 'Client Property Damage',
+  defendant_pd: 'Defendant Property Damage',
+  injury_photo: 'Injury Photo',
+  scene_photo: 'Scene Photo',
+  other: 'Other',
+};
+
+export const EMAIL_CATEGORY_LABELS: Record<EmailCategory, string> = {
+  offer: 'Offer',
+  counteroffer: 'Counteroffer',
+  coverage_response: 'Coverage Response',
+  liability_decision: 'Liability Decision',
+  medical_records: 'Medical Records',
+  medical_bills: 'Medical Bills',
+  policy_limits_response: 'Policy Limits',
+  client_communication: 'Client',
+  attorney_correspondence: 'Attorney',
+  general: 'General',
+};
+
 export interface DocumentAttachment {
   type: DocumentType;
-  fileData: string | null; // Base64 string
+  fileData: string | null;
   fileName: string;
   mimeType?: string;
-  source?: string; // e.g. "Client Portal", "Email", "Scanner"
-  tags?: string[]; // Custom user-defined tags
+  source?: string;
+  tags?: string[];
   linkedFacilityId?: string;
+  photoCategory?: PhotoCategory;
 }
 
 export type MedicalProviderType = 'hospital' | 'er' | 'urgent_care' | 'chiropractor' | 'physical_therapy' | 'orthopedic' | 'neurologist' | 'pain_management' | 'primary_care' | 'imaging' | 'surgery_center' | 'other';
@@ -36,12 +103,14 @@ export interface MedicalProvider {
   zip?: string;
   phone?: string;
   fax?: string;
+  email?: string;
   contactPerson?: string;
   totalCost?: number;
   notes?: string;
   dateOfFirstVisit?: string;
   dateOfLastVisit?: string;
   isCurrentlyTreating?: boolean;
+  preferredContactMethod?: PreferredContactMethod;
 }
 
 export interface EmailAttachment {
@@ -52,7 +121,7 @@ export interface EmailAttachment {
 
 export interface EmailMatchAnalysis {
   suggestedCaseId: string | null;
-  confidenceScore: number; // 0-100
+  confidenceScore: number;
   reasoning: string;
 }
 
@@ -64,11 +133,12 @@ export interface Email {
   body: string;
   date: string;
   isRead: boolean;
-  direction: 'inbound' | 'outbound'; // Added direction
-  threadId?: string; // Added threadId for grouping
+  direction: 'inbound' | 'outbound';
+  threadId?: string;
   attachments: EmailAttachment[];
-  linkedCaseId?: string; // If already linked
-  aiMatch?: EmailMatchAnalysis; // Result of AI analysis
+  linkedCaseId?: string;
+  aiMatch?: EmailMatchAnalysis;
+  category?: EmailCategory;
 }
 
 export interface CommunicationLog {
@@ -78,17 +148,17 @@ export interface CommunicationLog {
   contactName: string;
   contactPhone: string;
   timestamp: string;
-  duration?: string; // For calls (e.g., "4m 12s")
-  status?: 'completed' | 'missed' | 'voicemail' | 'sent' | 'received'; 
-  content: string; // Call notes or SMS body
-  transcript?: string; // Full text transcript of the call
-  aiSummary?: string; // AI generated summary of the transcript
+  duration?: string;
+  status?: 'completed' | 'missed' | 'voicemail' | 'sent' | 'received';
+  content: string;
+  transcript?: string;
+  aiSummary?: string;
 }
 
 export interface ChatAttachment {
   name: string;
   type: 'image' | 'file';
-  url?: string; // Base64 or URL
+  url?: string;
 }
 
 export interface ChatMessage {
@@ -99,10 +169,11 @@ export interface ChatMessage {
   message: string;
   timestamp: string;
   attachments?: ChatAttachment[];
+  channel?: 'intake' | 'medical';
 }
 
 export interface AIAnalysis {
-  caseScore: number; // 1-10
+  caseScore: number;
   liabilityAssessment: string;
   retainerValid: boolean;
   retainerNotes: string;
@@ -131,8 +202,18 @@ export interface Insurance {
   policyNumber?: string;
   claimNumber?: string;
   adjuster?: string;
-  coverageLimits?: string; // e.g. "100/300/50"
+  coverageLimits?: string;
   isUninsured?: boolean;
+  coverageStatus?: CoverageStatusType;
+  liabilityStatus?: LiabilityStatusType;
+  coverageFollowUpDate?: string;
+  liabilityFollowUpDate?: string;
+  coverageStatusDate?: string;
+  liabilityStatusDate?: string;
+  policyLimitsStatus?: PolicyLimitsStatusType;
+  policyLimitsAmount?: string;
+  policyLimitsRequestDate?: string;
+  policyLimitsReceivedDate?: string;
 }
 
 export interface VehicleInfo {
@@ -154,7 +235,6 @@ export interface ClientDetails {
     emergency_contact?: { name?: string; phone?: string };
 }
 
-// Detailed Intake Schema (Exhibit B)
 export interface ExtendedIntakeData {
   intake_admin?: {
     total_clients?: number;
@@ -173,14 +253,14 @@ export interface ExtendedIntakeData {
     agency?: string;
     city?: string;
     county?: string;
-    accident_location?: string; // Street/Intersection
+    accident_location?: string;
     plaintiff_role?: string;
     date_of_loss?: string;
     day_of_week?: string;
     time_of_accident?: string;
     weather_conditions?: string;
     weather_conditions_other?: string;
-    traffic_controls?: string[]; 
+    traffic_controls?: string[];
     traffic_controls_other?: string;
     main_intersections?: string;
     intersection_city?: string;
@@ -191,15 +271,15 @@ export interface ExtendedIntakeData {
     accident_facts?: string;
   };
   client?: ClientDetails;
-  additional_clients?: ClientDetails[]; // Support for multiple clients
+  additional_clients?: ClientDetails[];
   employment?: {
     time_lost_from_work?: boolean;
     how_much_time_lost?: string;
     position?: string;
-    employer?: { 
-        name?: string; 
-        phone?: string; 
-        address?: { street?: string; city?: string; state?: string; zip?: string } 
+    employer?: {
+        name?: string;
+        phone?: string;
+        address?: { street?: string; city?: string; state?: string; zip?: string }
     };
     wages?: { amount?: number; per?: 'Hour' | 'Week' | 'Year' };
     hours_per_week?: number;
@@ -217,7 +297,7 @@ export interface ExtendedIntakeData {
     property_damage_amount_or_estimate?: number;
     total_loss?: boolean;
     prior_accidents_within_last_10_years?: boolean;
-    prior_accident_dates?: string[]; // strings for simplicity
+    prior_accident_dates?: string[];
     injuries_summary?: string;
     at_fault?: boolean;
     claim_made?: boolean;
@@ -233,7 +313,6 @@ export interface ExtendedIntakeData {
     providers?: Array<{ name: string; address?: string; phone?: string }>;
     um_uim_claim?: string;
   };
-  // New Insurance / Defendant sections
   auto_insurance?: {
     driver_or_passenger_insurance_company?: string;
     vehicle_owner_insurance_company?: string;
@@ -282,61 +361,113 @@ export interface ExtendedIntakeData {
   notes?: string;
 }
 
+export interface CaseTask {
+  id: string;
+  caseId: string;
+  title: string;
+  description?: string;
+  type: TaskType;
+  status: TaskStatus;
+  dueDate: string;
+  completedDate?: string;
+  assignedTeam?: 'Team A' | 'Team B';
+  recurrence?: 'one-time' | 'weekly' | 'monthly';
+  priority: 'high' | 'medium' | 'low';
+  createdAt: string;
+  autoGenerated?: boolean;
+}
+
+export interface ERBillLine {
+  type: 'facility' | 'physician' | 'radiology';
+  status: ERBillStatus;
+  requestDate?: string;
+  receivedDate?: string;
+  followUpDate?: string;
+  amount?: number;
+  notes?: string;
+}
+
+export interface ERVisit {
+  id: string;
+  facilityName: string;
+  facilityId?: string;
+  visitDate: string;
+  bills: ERBillLine[];
+  recordStatus: ERBillStatus;
+  recordRequestDate?: string;
+  recordReceivedDate?: string;
+  recordFollowUpDate?: string;
+}
+
+export interface SpecialsPackage {
+  id: string;
+  status: SpecialsStatus;
+  items: SpecialsItem[];
+  totalAmount: number;
+  compiledDocumentIndex?: number;
+  notes?: string;
+  lastUpdated: string;
+}
+
+export interface SpecialsItem {
+  providerName: string;
+  providerId?: string;
+  documentType: string;
+  amount: number;
+  included: boolean;
+  documentIndex?: number;
+}
+
 export interface CaseFile {
   id: string;
-  
-  // Demographics (Quick View)
+
   clientName: string;
   clientDob?: string;
   clientAddress?: string;
   clientEmail: string;
   clientPhone: string;
-  
-  // Incident (Quick View)
+
   accidentDate: string;
   location?: string;
-  description: string; // Facts of loss
-  impact?: string; // New field for impact summary e.g. "High PD - HP"
-  statuteOfLimitationsDate?: string; // Deadline date based on date of loss
-  
-  // Auto Specific (Quick View)
+  description: string;
+  impact?: string;
+  statuteOfLimitationsDate?: string;
+
   vehicleInfo?: VehicleInfo;
-  
-  // Parties & Insurance (Quick View)
+
   parties?: Party[];
   insurance?: Insurance[];
-  
-  // Medical (Quick View)
+
   treatmentStatus?: string;
   treatmentProviders?: string;
   medicalProviders?: MedicalProvider[];
 
-  // System
   status: CaseStatus;
   documents: DocumentAttachment[];
   aiAnalysis?: AIAnalysis;
   createdAt: string;
   referralSource: string;
   activityLog: ActivityLog[];
-  
-  // Tracking Dates
-  actionDate?: string; // Date accepted/rejected
-  assignedDate?: string; // Date team assigned
-  
-  // Workflow
+
+  actionDate?: string;
+  assignedDate?: string;
+
   assignedTeam?: 'Team A' | 'Team B';
   cmsSyncStatus?: 'PENDING' | 'SYNCED' | 'FAILED';
 
-  // Extended Data (Post-Acceptance)
   extendedIntake?: ExtendedIntakeData;
 
-  // Communication
   linkedEmails?: Email[];
-  communications?: CommunicationLog[]; // Calls and SMS from RingCentral
-  
-  // Internal Chat
+  communications?: CommunicationLog[];
+
   chatHistory?: ChatMessage[];
 
-  // Team Notes
   notes?: string;
+
+  tasks?: CaseTask[];
+  erVisits?: ERVisit[];
+  mriCompleted?: boolean;
+  mriCompletedDate?: string;
+  treatmentEndDate?: string;
+  specials?: SpecialsPackage;
 }

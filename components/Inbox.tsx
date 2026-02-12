@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Email, CaseFile, DocumentAttachment } from '../types';
+import { Email, CaseFile, DocumentAttachment, EmailCategory, EMAIL_CATEGORY_LABELS } from '../types';
 import { matchEmailToCase } from '../services/geminiService';
 
 interface InboxProps {
@@ -14,6 +14,7 @@ export const Inbox: React.FC<InboxProps> = ({ cases, emails, setEmails, onLinkCa
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSorting, setIsSorting] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   
   // Preview State
   const [previewAttachment, setPreviewAttachment] = useState<DocumentAttachment | null>(null);
@@ -152,10 +153,25 @@ export const Inbox: React.FC<InboxProps> = ({ cases, emails, setEmails, onLinkCa
       setIsSorting(false);
   };
 
-  const filteredEmails = emails.filter(e => 
-      e.subject.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      e.from.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const CATEGORY_COLORS: Record<EmailCategory, string> = {
+      offer: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+      counteroffer: 'bg-teal-100 text-teal-700 border-teal-200',
+      coverage_response: 'bg-blue-100 text-blue-700 border-blue-200',
+      liability_decision: 'bg-amber-100 text-amber-700 border-amber-200',
+      medical_records: 'bg-rose-100 text-rose-700 border-rose-200',
+      medical_bills: 'bg-orange-100 text-orange-700 border-orange-200',
+      policy_limits_response: 'bg-cyan-100 text-cyan-700 border-cyan-200',
+      client_communication: 'bg-sky-100 text-sky-700 border-sky-200',
+      attorney_correspondence: 'bg-slate-100 text-slate-700 border-slate-200',
+      general: 'bg-gray-100 text-gray-600 border-gray-200',
+  };
+
+  const filteredEmails = emails.filter(e => {
+      const matchSearch = e.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          e.from.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchCategory = categoryFilter === 'ALL' || e.category === categoryFilter;
+      return matchSearch && matchCategory;
+  });
 
   return (
     <div className="h-[calc(100vh-4rem)] flex animate-fade-in bg-white rounded-2xl border border-slate-200 overflow-hidden">
@@ -183,15 +199,25 @@ export const Inbox: React.FC<InboxProps> = ({ cases, emails, setEmails, onLinkCa
                     </button>
                 </div>
                 <div className="relative">
-                    <input 
-                        type="text" 
-                        placeholder="Search emails..." 
+                    <input
+                        type="text"
+                        placeholder="Search emails..."
                         className="w-full pl-9 pr-4 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                     <svg className="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                 </div>
+                <select
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                >
+                    <option value="ALL">All Categories</option>
+                    {Object.entries(EMAIL_CATEGORY_LABELS).map(([val, label]) => (
+                        <option key={val} value={val}>{label}</option>
+                    ))}
+                </select>
             </div>
             <div className="flex-1 overflow-y-auto">
                 {filteredEmails.map(email => (
@@ -221,6 +247,12 @@ export const Inbox: React.FC<InboxProps> = ({ cases, emails, setEmails, onLinkCa
                                 </div>
                             ) : null}
                             
+                            {email.category && (
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${CATEGORY_COLORS[email.category]}`}>
+                                    {EMAIL_CATEGORY_LABELS[email.category]}
+                                </span>
+                            )}
+
                             {!email.linkedCaseId && email.attachments.length > 0 && (
                                 <div className="inline-flex items-center text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
                                     <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>

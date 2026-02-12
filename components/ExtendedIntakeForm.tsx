@@ -61,7 +61,7 @@ export const ExtendedIntakeForm: React.FC<ExtendedIntakeFormProps> = ({ caseData
 
   // Form Generation State
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [selectedForm, setSelectedForm] = useState<'rep_lien' | 'foia' | 'intake_summary' | null>(null);
+  const [selectedForm, setSelectedForm] = useState<'rep_lien' | 'foia' | 'intake_summary' | 'boss_intake_form' | null>(null);
   
   // Document Generator State
   const [showDocPreview, setShowDocPreview] = useState(false);
@@ -917,16 +917,30 @@ export const ExtendedIntakeForm: React.FC<ExtendedIntakeFormProps> = ({ caseData
                            </label>
 
                            <label className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedForm === 'intake_summary' ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 hover:bg-slate-50'}`}>
-                               <input 
-                                   type="radio" 
+                               <input
+                                   type="radio"
                                    name="formType"
                                    checked={selectedForm === 'intake_summary'}
                                    onChange={() => setSelectedForm('intake_summary')}
-                                   className="w-5 h-5 text-indigo-600 focus:ring-indigo-500" 
+                                   className="w-5 h-5 text-indigo-600 focus:ring-indigo-500"
                                />
                                <div>
                                    <span className="text-sm font-bold text-slate-800 block">Client Intake Summary</span>
                                    <span className="text-xs text-slate-500">Detailed form including Accident, Client, Medical, and Insurance info.</span>
+                               </div>
+                           </label>
+
+                           <label className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedForm === 'boss_intake_form' ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 hover:bg-slate-50'}`}>
+                               <input
+                                   type="radio"
+                                   name="formType"
+                                   checked={selectedForm === 'boss_intake_form'}
+                                   onChange={() => setSelectedForm('boss_intake_form')}
+                                   className="w-5 h-5 text-indigo-600 focus:ring-indigo-500"
+                               />
+                               <div>
+                                   <span className="text-sm font-bold text-slate-800 block">Boss Intake Form</span>
+                                   <span className="text-xs text-slate-500">Auto-populated intake spreadsheet with all case data, providers, and insurance.</span>
                                </div>
                            </label>
                        </div>
