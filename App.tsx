@@ -18,7 +18,7 @@ const MOCK_EMAILS: Email[] = [
     from: 'State Farm Claims',
     fromEmail: 'claims@statefarm.com',
     subject: 'Claim SF-889922 - Liability Status - Michael Chen',
-    body: 'We have completed our review of the intersection footage. Our insured driver, Susan Miller, has accepted 100% liability for the accident on 11/05/2023.',
+    body: 'We have completed our review of the intersection footage. Our insured driver, Susan Miller, has accepted 100% liability for the accident on 11/05/2026.',
     date: '10:45 AM',
     isRead: false,
     direction: 'inbound',
@@ -70,158 +70,158 @@ const MOCK_EMAILS: Email[] = [
 // Additional mock cases to populate the dashboard
 const ADDITIONAL_CASES: CaseFile[] = [
     {
-        id: 'case-401', clientName: 'Sarah Connor', accidentDate: '2023-11-20', location: 'Residential Neighborhood',
+        id: 'case-401', clientName: 'Sarah Connor', accidentDate: '2026-11-20', location: 'Residential Neighborhood',
         description: 'Client was walking dog when neighbor\'s Pitbull escaped yard and attacked. Deep lacerations to forearm.',
         impact: 'Dog Bite - Scarring', status: CaseStatus.REVIEW_NEEDED, assignedTeam: 'Team A',
         referralSource: 'Google Ads', clientEmail: 's.connor@example.com', clientPhone: '(310) 555-0001',
-        documents: [], activityLog: [], createdAt: '2023-11-21'
+        documents: [], activityLog: [], createdAt: '2026-11-21'
     },
     {
-        id: 'case-402', clientName: 'John Rambo', accidentDate: '2023-10-30', location: 'State Highway 1',
+        id: 'case-402', clientName: 'John Rambo', accidentDate: '2026-10-30', location: 'State Highway 1',
         description: 'Motorcycle accident. Defendant made illegal U-turn. Client laid bike down. Road rash and broken clavicle.',
         impact: 'Motorcycle - Fracture', status: CaseStatus.INTAKE_PROCESSING, assignedTeam: 'Team B',
         referralSource: 'Social Media', clientEmail: 'j.rambo@example.com', clientPhone: '(310) 555-0002',
-        documents: [], activityLog: [], createdAt: '2023-11-01'
+        documents: [], activityLog: [], createdAt: '2026-11-01'
     },
     {
-        id: 'case-403', clientName: 'Ellen Ripley', accidentDate: '2023-12-01', location: 'Grocery Store Aisle 4',
+        id: 'case-403', clientName: 'Ellen Ripley', accidentDate: '2026-12-01', location: 'Grocery Store Aisle 4',
         description: 'Slip and fall on spilled laundry detergent. No wet floor sign. Client injured lower back and hip.',
         impact: 'Premises - Soft Tissue', status: CaseStatus.ACCEPTED, assignedTeam: 'Team A',
         referralSource: 'Referrals', clientEmail: 'e.ripley@example.com', clientPhone: '(310) 555-0003',
-        documents: [], activityLog: [], createdAt: '2023-12-02'
+        documents: [], activityLog: [], createdAt: '2026-12-02'
     },
     {
-        id: 'case-404', clientName: 'Marty McFly', accidentDate: '2023-12-15', location: 'Hill Valley Intersection',
+        id: 'case-404', clientName: 'Marty McFly', accidentDate: '2026-12-15', location: 'Hill Valley Intersection',
         description: 'Rear-ended at stop sign. Low speed impact but client reports neck pain.',
         impact: 'Low PD - Whiplash', status: CaseStatus.NEW,
         referralSource: 'Organic Web', clientEmail: 'm.mcfly@example.com', clientPhone: '(310) 555-0004',
-        documents: [], activityLog: [], createdAt: '2023-12-16'
+        documents: [], activityLog: [], createdAt: '2026-12-16'
     },
     {
-        id: 'case-405', clientName: 'Bruce Wayne', accidentDate: '2023-09-15', location: 'Gotham City Bridge',
+        id: 'case-405', clientName: 'Bruce Wayne', accidentDate: '2026-09-15', location: 'Gotham City Bridge',
         description: 'Minor fender bender. Client works night shift, says neck hurts slightly.',
         impact: 'Low PD', status: CaseStatus.REJECTED,
         referralSource: 'Billboards', clientEmail: 'b.wayne@example.com', clientPhone: '(310) 555-0005',
-        documents: [], activityLog: [], createdAt: '2023-09-16'
+        documents: [], activityLog: [], createdAt: '2026-09-16'
     },
     {
-        id: 'case-406', clientName: 'Tony Stark', accidentDate: '2023-11-11', location: 'Downtown',
+        id: 'case-406', clientName: 'Tony Stark', accidentDate: '2026-11-11', location: 'Downtown',
         description: 'Defective product. E-scooter battery malfunctioned causing burns.',
         impact: 'Product Liability', status: CaseStatus.ANALYZING,
         referralSource: 'Google Ads', clientEmail: 't.stark@example.com', clientPhone: '(310) 555-0006',
-        documents: [], activityLog: [], createdAt: '2023-11-12'
+        documents: [], activityLog: [], createdAt: '2026-11-12'
     },
     {
-        id: 'case-407', clientName: 'Peter Parker', accidentDate: '2023-08-20', location: 'Crosswalk on Queens Blvd',
+        id: 'case-407', clientName: 'Peter Parker', accidentDate: '2026-08-20', location: 'Crosswalk on Queens Blvd',
         description: 'Pedestrian struck by delivery van while in crosswalk. Broken leg.',
         impact: 'Pedestrian - Fracture', status: CaseStatus.INTAKE_COMPLETE, assignedTeam: 'Team B',
         referralSource: 'Social Media', clientEmail: 'p.parker@example.com', clientPhone: '(310) 555-0007',
-        documents: [], activityLog: [], createdAt: '2023-08-21'
+        documents: [], activityLog: [], createdAt: '2026-08-21'
     },
     {
-        id: 'case-408', clientName: 'Clark Kent', accidentDate: '2023-11-01', location: 'Bike Lane',
+        id: 'case-408', clientName: 'Clark Kent', accidentDate: '2026-11-01', location: 'Bike Lane',
         description: 'Cyclist doored by parked car. Concussion and wrist sprain.',
         impact: 'Bicycle - Head Injury', status: CaseStatus.LOST_CONTACT,
         referralSource: 'Organic Web', clientEmail: 'c.kent@example.com', clientPhone: '(310) 555-0008',
-        documents: [], activityLog: [], createdAt: '2023-11-02'
+        documents: [], activityLog: [], createdAt: '2026-11-02'
     },
     {
-        id: 'case-409', clientName: 'Diana Prince', accidentDate: '2023-10-10', location: 'Museum Parking Lot',
+        id: 'case-409', clientName: 'Diana Prince', accidentDate: '2026-10-10', location: 'Museum Parking Lot',
         description: 'Backing accident. Dispute over liability. Witness available.',
         impact: 'Med PD - Dispute', status: CaseStatus.INTAKE_PROCESSING, assignedTeam: 'Team A',
         referralSource: 'Billboards', clientEmail: 'd.prince@example.com', clientPhone: '(310) 555-0009',
-        documents: [], activityLog: [], createdAt: '2023-10-11'
+        documents: [], activityLog: [], createdAt: '2026-10-11'
     },
     {
-        id: 'case-410', clientName: 'Natasha Romanoff', accidentDate: '2023-12-05', location: 'Highway 101',
+        id: 'case-410', clientName: 'Natasha Romanoff', accidentDate: '2026-12-05', location: 'Highway 101',
         description: 'Hit and run. Client obtained partial plate. Uninsured motorist claim likely.',
         impact: 'Hit & Run - Soft Tissue', status: CaseStatus.ACCEPTED, assignedTeam: 'Team B',
         referralSource: 'Google Ads', clientEmail: 'n.romanoff@example.com', clientPhone: '(310) 555-0010',
-        documents: [], activityLog: [], createdAt: '2023-12-06'
+        documents: [], activityLog: [], createdAt: '2026-12-06'
     },
     {
-        id: 'case-411', clientName: 'Steve Rogers', accidentDate: '2023-11-25', location: 'Gym Shower',
+        id: 'case-411', clientName: 'Steve Rogers', accidentDate: '2026-11-25', location: 'Gym Shower',
         description: 'Slip and fall at gym. Tiles were loose. Client broke ankle.',
         impact: 'Premises - Fracture', status: CaseStatus.REVIEW_NEEDED, assignedTeam: 'Team A',
         referralSource: 'Referrals', clientEmail: 's.rogers@example.com', clientPhone: '(310) 555-0011',
-        documents: [], activityLog: [], createdAt: '2023-11-26'
+        documents: [], activityLog: [], createdAt: '2026-11-26'
     },
     {
-        id: 'case-412', clientName: 'Wade Wilson', accidentDate: '2023-09-30', location: 'Clinic',
+        id: 'case-412', clientName: 'Wade Wilson', accidentDate: '2026-09-30', location: 'Clinic',
         description: 'Alleged medical malpractice during routine surgery. Infection set in.',
         impact: 'Med Mal', status: CaseStatus.ANALYZING, assignedTeam: 'Team B',
         referralSource: 'Google Ads', clientEmail: 'w.wilson@example.com', clientPhone: '(310) 555-0012',
-        documents: [], activityLog: [], createdAt: '2023-10-01'
+        documents: [], activityLog: [], createdAt: '2026-10-01'
     },
     {
-        id: 'case-413', clientName: 'Logan Howlett', accidentDate: '2023-10-15', location: 'Logging Site',
+        id: 'case-413', clientName: 'Logan Howlett', accidentDate: '2026-10-15', location: 'Logging Site',
         description: 'Workplace injury. Machinery malfunction.',
         impact: 'Work Comp', status: CaseStatus.REJECTED,
         referralSource: 'Organic Web', clientEmail: 'l.howlett@example.com', clientPhone: '(310) 555-0013',
-        documents: [], activityLog: [], createdAt: '2023-10-16'
+        documents: [], activityLog: [], createdAt: '2026-10-16'
     },
     {
-        id: 'case-414', clientName: 'Jean Grey', accidentDate: '2023-08-01', location: 'Intersection',
+        id: 'case-414', clientName: 'Jean Grey', accidentDate: '2026-08-01', location: 'Intersection',
         description: 'Passenger in Uber that was rear-ended. Multiple passengers injured.',
         impact: 'Rideshare - Soft Tissue', status: CaseStatus.INTAKE_COMPLETE, assignedTeam: 'Team A',
         referralSource: 'Social Media', clientEmail: 'j.grey@example.com', clientPhone: '(310) 555-0014',
-        documents: [], activityLog: [], createdAt: '2023-08-02'
+        documents: [], activityLog: [], createdAt: '2026-08-02'
     },
     {
-        id: 'case-415', clientName: 'Scott Summers', accidentDate: '2023-12-20', location: 'School Zone',
+        id: 'case-415', clientName: 'Scott Summers', accidentDate: '2026-12-20', location: 'School Zone',
         description: 'Rear-ended by distracted driver. Client has vision issues post-accident.',
         impact: 'Med PD - Head Injury', status: CaseStatus.NEW,
         referralSource: 'Google Ads', clientEmail: 's.summers@example.com', clientPhone: '(310) 555-0015',
-        documents: [], activityLog: [], createdAt: '2023-12-21'
+        documents: [], activityLog: [], createdAt: '2026-12-21'
     },
     {
-        id: 'case-416', clientName: 'Ororo Munroe', accidentDate: '2023-11-05', location: 'Parking Garage',
+        id: 'case-416', clientName: 'Ororo Munroe', accidentDate: '2026-11-05', location: 'Parking Garage',
         description: 'Car scratched while parked. No bodily injury.',
         impact: 'PD Only', status: CaseStatus.REJECTED,
         referralSource: 'Organic Web', clientEmail: 'o.munroe@example.com', clientPhone: '(310) 555-0016',
-        documents: [], activityLog: [], createdAt: '2023-11-06'
+        documents: [], activityLog: [], createdAt: '2026-11-06'
     },
     {
-        id: 'case-417', clientName: 'Hank McCoy', accidentDate: '2023-10-25', location: 'Interstate 80',
+        id: 'case-417', clientName: 'Hank McCoy', accidentDate: '2026-10-25', location: 'Interstate 80',
         description: 'Sideswiped by semi-truck changing lanes. Client vehicle pushed into barrier.',
         impact: 'Trucking - Heavy PD', status: CaseStatus.INTAKE_PROCESSING, assignedTeam: 'Team B',
         referralSource: 'Billboards', clientEmail: 'h.mccoy@example.com', clientPhone: '(310) 555-0017',
-        documents: [], activityLog: [], createdAt: '2023-10-26'
+        documents: [], activityLog: [], createdAt: '2026-10-26'
     },
     {
-        id: 'case-418', clientName: 'Remy LeBeau', accidentDate: '2023-11-15', location: 'Bourbon St',
+        id: 'case-418', clientName: 'Remy LeBeau', accidentDate: '2026-11-15', location: 'Bourbon St',
         description: 'Pedestrian hit by drunk driver. Police arrested defendant at scene.',
         impact: 'DUI - Severe', status: CaseStatus.ACCEPTED, assignedTeam: 'Team A',
         referralSource: 'Referrals', clientEmail: 'r.lebeau@example.com', clientPhone: '(310) 555-0018',
-        documents: [], activityLog: [], createdAt: '2023-11-16'
+        documents: [], activityLog: [], createdAt: '2026-11-16'
     },
     {
-        id: 'case-419', clientName: 'Anna Marie', accidentDate: '2023-12-08', location: 'Dog Park',
+        id: 'case-419', clientName: 'Anna Marie', accidentDate: '2026-12-08', location: 'Dog Park',
         description: 'Client bitten by unleashed dog. Owner fled but was identified by witnesses.',
         impact: 'Dog Bite', status: CaseStatus.REVIEW_NEEDED, assignedTeam: 'Team B',
         referralSource: 'Social Media', clientEmail: 'a.marie@example.com', clientPhone: '(310) 555-0019',
-        documents: [], activityLog: [], createdAt: '2023-12-09'
+        documents: [], activityLog: [], createdAt: '2026-12-09'
     },
     {
-        id: 'case-420', clientName: 'Bobby Drake', accidentDate: '2023-09-20', location: 'Ice Rink Lobby',
+        id: 'case-420', clientName: 'Bobby Drake', accidentDate: '2026-09-20', location: 'Ice Rink Lobby',
         description: 'Slip and fall on water puddle. No caution signs.',
         impact: 'Premises', status: CaseStatus.INTAKE_PAUSED, assignedTeam: 'Team A',
         referralSource: 'Organic Web', clientEmail: 'b.drake@example.com', clientPhone: '(310) 555-0020',
-        documents: [], activityLog: [], createdAt: '2023-09-21'
+        documents: [], activityLog: [], createdAt: '2026-09-21'
     },
     {
-        id: 'case-421', clientName: 'Kitty Pryde', accidentDate: '2023-12-22', location: 'Tech Park',
+        id: 'case-421', clientName: 'Kitty Pryde', accidentDate: '2026-12-22', location: 'Tech Park',
         description: 'T-boned at intersection. Client says other driver ran red light.',
         impact: 'High PD', status: CaseStatus.NEW,
         referralSource: 'Google Ads', clientEmail: 'k.pryde@example.com', clientPhone: '(310) 555-0021',
-        documents: [], activityLog: [], createdAt: '2023-12-23'
+        documents: [], activityLog: [], createdAt: '2026-12-23'
     },
     {
-        id: 'case-422', clientName: 'Piotr Rasputin', accidentDate: '2023-11-30', location: 'Construction Site',
+        id: 'case-422', clientName: 'Piotr Rasputin', accidentDate: '2026-11-30', location: 'Construction Site',
         description: 'Scaffolding collapse. Debris hit client walking by.',
         impact: 'Construction - Negligence', status: CaseStatus.ACCEPTED, assignedTeam: 'Team A',
         referralSource: 'Billboards', clientEmail: 'p.rasputin@example.com', clientPhone: '(310) 555-0022',
-        documents: [], activityLog: [], createdAt: '2023-12-01'
+        documents: [], activityLog: [], createdAt: '2026-12-01'
     }
 ];
 
@@ -242,7 +242,7 @@ export default function App() {
       clientAddress: '123 Maple Ave, Chicago IL',
       clientEmail: 'm.chen@email.com',
       clientPhone: '(312) 555-0123',
-      accidentDate: '2023-11-05',
+      accidentDate: '2026-11-05',
       location: 'Main St & 4th Ave',
       description: 'Client was proceeding through green light northbound on Main St when Defendant ran a red light westbound on 4th Ave, striking Client\'s vehicle on the driver side (T-bone). Airbags deployed. Client lost consciousness.',
       impact: 'High PD - Hospital',
@@ -366,7 +366,7 @@ export default function App() {
       clientAddress: '882 Elm St, Chicago IL',
       clientEmail: 'j.rodriguez@example.com',
       clientPhone: '(312) 555-0199',
-      accidentDate: '2023-12-10',
+      accidentDate: '2026-12-10',
       location: 'I-90 Westbound',
       description: 'Rear-ended by commercial truck while in stop-and-go traffic. Heavy property damage, whiplash, concussion.',
       impact: 'Med PD - Comm Veh',
@@ -377,7 +377,7 @@ export default function App() {
       treatmentProviders: 'Downtown Chiro',
       status: CaseStatus.INTAKE_PROCESSING,
       documents: [],
-      createdAt: '2023-12-12T09:00:00Z',
+      createdAt: '2026-12-12T09:00:00Z',
       referralSource: 'Billboard',
       activityLog: [],
       assignedTeam: 'Team A',
@@ -390,7 +390,7 @@ export default function App() {
               senderInitials: 'SB',
               isCurrentUser: false,
               message: 'Teams Channel #case-202-rodriguez created successfully.',
-              timestamp: '2023-12-12T09:05:00Z'
+              timestamp: '2026-12-12T09:05:00Z'
           }
       ]
     },
@@ -401,7 +401,7 @@ export default function App() {
       clientAddress: '7742 Lake Shore Dr, Chicago IL',
       clientEmail: 'linda.j@example.com',
       clientPhone: '(312) 555-0888',
-      accidentDate: '2023-10-12',
+      accidentDate: '2026-10-12',
       location: 'I-294 South',
       description: 'Sideswiped by merging vehicle. Defendant attempted to change lanes without looking. Client vehicle spun out into median.',
       impact: 'Low PD - Surgery',
@@ -412,7 +412,7 @@ export default function App() {
       treatmentProviders: 'Illinois Bone & Joint',
       status: CaseStatus.ACCEPTED,
       documents: [],
-      createdAt: '2023-10-15T14:30:00Z',
+      createdAt: '2026-10-15T14:30:00Z',
       referralSource: 'Attorney Referral',
       activityLog: [],
       assignedTeam: 'Team B',
