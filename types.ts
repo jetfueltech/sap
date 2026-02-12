@@ -89,6 +89,8 @@ export interface DocumentAttachment {
   tags?: string[];
   linkedFacilityId?: string;
   photoCategory?: PhotoCategory;
+  storagePath?: string;
+  storageUrl?: string;
 }
 
 export type MedicalProviderType = 'hospital' | 'er' | 'urgent_care' | 'chiropractor' | 'physical_therapy' | 'orthopedic' | 'neurologist' | 'pain_management' | 'primary_care' | 'imaging' | 'surgery_center' | 'other';

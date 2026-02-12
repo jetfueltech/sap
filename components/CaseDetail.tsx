@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { CaseFile, CaseStatus, DocumentAttachment, DocumentType, Insurance, ActivityLog, ExtendedIntakeData, Email, CommunicationLog, ChatMessage, DOCUMENT_NAMING_RULES, PhotoCategory, PHOTO_CATEGORY_LABELS } from '../types';
+import { CaseFile, CaseStatus, Insurance, ActivityLog, ExtendedIntakeData, Email, CommunicationLog, ChatMessage } from '../types';
 import { analyzeIntakeCase } from '../services/geminiService';
 import { ExtendedIntakeForm } from './ExtendedIntakeForm';
 import { MedicalTreatment } from './MedicalTreatment';
@@ -9,19 +9,12 @@ import { ERBillTracker } from './ERBillTracker';
 import { DemandReadiness } from './DemandReadiness';
 import { SpecialsTracker } from './SpecialsTracker';
 import { CaseTasksPanel } from './CaseTasksPanel';
+import { DocumentsPanel } from './DocumentsPanel';
 
 interface CaseDetailProps {
   caseData: CaseFile;
   onBack: () => void;
   onUpdateCase: (updatedCase: CaseFile) => void;
-}
-
-interface PendingUpload {
-  fileData: string;
-  mimeType: string;
-  fileName: string;
-  type: DocumentType;
-  source: string;
 }
 
 export const CaseDetail: React.FC<CaseDetailProps> = ({ caseData, onBack, onUpdateCase }) => {
@@ -58,14 +51,6 @@ export const CaseDetail: React.FC<CaseDetailProps> = ({ caseData, onBack, onUpda
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatFileInputRef = useRef<HTMLInputElement>(null);
   
-  // Upload State
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null);
-
-  // Document Management State
-  const [tagInput, setTagInput] = useState<string>('');
-  const [activeDocIndex, setActiveDocIndex] = useState<number | null>(null);
-  const [previewDoc, setPreviewDoc] = useState<DocumentAttachment | null>(null);
   
   // Email Expansion State
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
@@ -81,11 +66,7 @@ export const CaseDetail: React.FC<CaseDetailProps> = ({ caseData, onBack, onUpda
   const [smsMessage, setSmsMessage] = useState('');
   const [smsSending, setSmsSending] = useState(false);
 
-  const [renamingDocIndex, setRenamingDocIndex] = useState<number | null>(null);
-  const [tempDocName, setTempDocName] = useState('');
 
-  const [editingTag, setEditingTag] = useState<{ docIdx: number; tagIdx: number } | null>(null);
-  const [tempTagValue, setTempTagValue] = useState('');
 
   // Call Timer Effect
   useEffect(() => {
@@ -347,73 +328,10 @@ export const CaseDetail: React.FC<CaseDetailProps> = ({ caseData, onBack, onUpda
       });
   };
 
-  const onFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPendingUpload({
-            fileData: reader.result as string,
-            fileName: file.name,
-            mimeType: file.type || 'application/octet-stream',
-            type: 'other',
-            source: 'Manual Upload'
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const handleDeleteDocument = (index: number) => {
-      if (!window.confirm('Are you sure you want to delete this document?')) return;
-      const updatedDocs = caseData.documents.filter((_, i) => i !== index);
-      let updatedCase = { ...caseData, documents: updatedDocs };
-      updatedCase = addActivity(updatedCase, `Document deleted: ${caseData.documents[index].fileName}`, 'user');
-      onUpdateCase(updatedCase);
-  };
-
-  const handleAddTag = (docIndex: number) => {
-      if (!tagInput.trim()) return;
-      const newDocs = [...caseData.documents];
-      if (!newDocs[docIndex].tags) newDocs[docIndex].tags = [];
-      newDocs[docIndex].tags?.push(tagInput.trim());
-      let updatedCase = { ...caseData, documents: newDocs };
-      onUpdateCase(updatedCase);
-      setTagInput('');
-      setActiveDocIndex(null);
-  };
-
-  const handleStartRename = (idx: number, currentName: string) => {
-      setRenamingDocIndex(idx);
-      setTempDocName(currentName);
-  };
-
-  const handleSaveRename = (idx: number) => {
-      if (!tempDocName.trim()) return;
-      const newDocs = [...caseData.documents];
-      newDocs[idx] = { ...newDocs[idx], fileName: tempDocName.trim() };
-      let updatedCase = { ...caseData, documents: newDocs };
-      onUpdateCase(updatedCase);
-      setRenamingDocIndex(null);
-  };
-
   const handleExtendedIntakeSave = (data: ExtendedIntakeData) => {
       let updatedCase = { ...caseData, extendedIntake: data };
       updatedCase = addActivity(updatedCase, 'Extended Intake Form updated.', 'user');
       onUpdateCase(updatedCase);
-  };
-
-  const handlePreviewEmailAttachment = (e: React.MouseEvent, att: any) => {
-      e.stopPropagation();
-      const mockDoc: DocumentAttachment = {
-          type: 'other', 
-          fileName: att.name,
-          fileData: null, 
-          mimeType: att.type === 'pdf' ? 'application/pdf' : 'image/jpeg',
-          source: 'Email Attachment'
-      };
-      setPreviewDoc(mockDoc);
   };
 
   const getScoreColor = (score: number) => {
@@ -611,71 +529,7 @@ export const CaseDetail: React.FC<CaseDetailProps> = ({ caseData, onBack, onUpda
       ) : activeTab === 'medical' ? (
           <div className="animate-fade-in"><MedicalTreatment caseData={caseData} onUpdateCase={onUpdateCase} /></div>
       ) : activeTab === 'documents' ? (
-        <div className="bg-white rounded-2xl border border-slate-200 p-8 animate-fade-in">
-             <h3 className="font-bold text-slate-800 mb-6 flex justify-between items-center text-lg">
-                 <span>Case Documents</span>
-                 <div className="flex items-center space-x-2">
-                     <button onClick={() => fileInputRef.current?.click()} className="text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium flex items-center shadow-sm">
-                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                         Upload Document
-                     </button>
-                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf" onChange={onFileSelect} />
-                 </div>
-             </h3>
-             <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200">
-                    <thead className="bg-slate-50">
-                        <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Document Name</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Type</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Source</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tags</th>
-                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-slate-200">
-                        {caseData.documents.map((doc, idx) => (
-                            <tr key={idx} className="hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => setPreviewDoc(doc)}>
-                                <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                                    <div className="flex items-center">
-                                        <div className={`flex-shrink-0 h-8 w-8 rounded flex items-center justify-center mr-3 ${doc.type === 'email' ? 'bg-blue-100 text-blue-600' : doc.mimeType?.includes('pdf') ? 'bg-red-50 text-red-500' : 'bg-indigo-50 text-indigo-500'}`}>
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                                        </div>
-                                        {renamingDocIndex === idx ? (
-                                            <input 
-                                                autoFocus
-                                                className="w-40 text-sm border border-indigo-300 rounded px-2 py-1 outline-none"
-                                                value={tempDocName}
-                                                onChange={e => setTempDocName(e.target.value)}
-                                                onBlur={() => handleSaveRename(idx)}
-                                            />
-                                        ) : (
-                                            <div className="flex items-center gap-2 group">
-                                                <span className="text-sm font-medium text-slate-900">{doc.fileName}</span>
-                                                <button onClick={() => handleStartRename(idx, doc.fileName)} className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-indigo-600 transition-opacity p-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap"><span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide bg-slate-100 text-slate-800">{doc.type}</span></td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{doc.source || 'Manual Upload'}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                    <div className="flex flex-wrap gap-2 items-center">
-                                        {doc.tags?.map((tag, tIdx) => (
-                                            <span key={tIdx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">{tag}</span>
-                                        ))}
-                                        {activeDocIndex === idx ? <input autoFocus className="w-16 text-xs border border-slate-300 rounded px-1 py-0.5" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => { if(e.key === 'Enter') handleAddTag(idx); }} onBlur={() => handleAddTag(idx)} /> : <button onClick={() => setActiveDocIndex(idx)} className="text-slate-400 text-xs font-bold">+</button>}
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <button onClick={() => handleDeleteDocument(idx)} className="text-slate-400 hover:text-rose-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-             </div>
-        </div>
+        <DocumentsPanel caseData={caseData} onUpdateCase={onUpdateCase} />
       ) : activeTab === 'ai_analysis' ? (
           <div className="animate-fade-in p-8 bg-white rounded-2xl border border-slate-200 min-h-[400px]">
               {caseData.aiAnalysis ? (
