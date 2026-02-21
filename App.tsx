@@ -11,6 +11,7 @@ import { Directory } from './components/Directory';
 import { CaseFile, CaseStatus, Email, DocumentAttachment } from './types';
 import { TasksView } from './components/TasksView';
 import { classifyAttachmentType } from './services/geminiService';
+import { applyWorkflowToCase } from './services/workflowEngine';
 
 // Initial Mock Emails moved from Inbox to App for persistence
 const MOCK_EMAILS: Email[] = [
@@ -495,12 +496,14 @@ export default function App() {
 
   useEffect(() => {
     const updatedCases = cases.map(c => {
-      if (!c.statuteOfLimitationsDate && c.accidentDate) {
-        const solDate = new Date(c.accidentDate);
+      let updated = c;
+      if (!updated.statuteOfLimitationsDate && updated.accidentDate) {
+        const solDate = new Date(updated.accidentDate);
         solDate.setFullYear(solDate.getFullYear() + 2);
-        return { ...c, statuteOfLimitationsDate: solDate.toISOString().split('T')[0] };
+        updated = { ...updated, statuteOfLimitationsDate: solDate.toISOString().split('T')[0] };
       }
-      return c;
+      updated = applyWorkflowToCase(updated);
+      return updated;
     });
 
     if (JSON.stringify(updatedCases) !== JSON.stringify(cases)) {
@@ -509,12 +512,14 @@ export default function App() {
   }, []);
 
   const handleCaseUpdate = (updatedCase: CaseFile) => {
-    setCases(cases.map(c => c.id === updatedCase.id ? updatedCase : c));
-    setSelectedCase(updatedCase);
+    const withWorkflow = applyWorkflowToCase(updatedCase);
+    setCases(cases.map(c => c.id === withWorkflow.id ? withWorkflow : c));
+    setSelectedCase(withWorkflow);
   };
 
   const handleNewCase = (newCase: CaseFile) => {
-    setCases([newCase, ...cases]);
+    const withWorkflow = applyWorkflowToCase(newCase);
+    setCases([withWorkflow, ...cases]);
   };
 
   const handleLinkEmail = async (caseId: string, email: Email) => {

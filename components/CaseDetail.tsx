@@ -10,6 +10,7 @@ import { DemandReadiness } from './DemandReadiness';
 import { SpecialsTracker } from './SpecialsTracker';
 import { CaseTasksPanel } from './CaseTasksPanel';
 import { DocumentsPanel } from './DocumentsPanel';
+import { CaseWorkflow } from './CaseWorkflow';
 
 interface CaseDetailProps {
   caseData: CaseFile;
@@ -18,7 +19,7 @@ interface CaseDetailProps {
 }
 
 export const CaseDetail: React.FC<CaseDetailProps> = ({ caseData, onBack, onUpdateCase }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'extended' | 'medical' | 'documents' | 'ai_analysis' | 'activity_log' | 'coverage' | 'er_records' | 'demand' | 'tasks' | 'specials'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'extended' | 'medical' | 'documents' | 'ai_analysis' | 'activity_log' | 'coverage' | 'er_records' | 'demand' | 'tasks' | 'specials' | 'workflow'>('workflow');
   const [analyzing, setAnalyzing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   
@@ -499,6 +500,10 @@ export const CaseDetail: React.FC<CaseDetailProps> = ({ caseData, onBack, onUpda
                  Specials
                  {activeTab === 'specials' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></div>}
              </button>
+             <button onClick={() => setActiveTab('workflow')} className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'workflow' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>
+                 Workflow
+                 {activeTab === 'workflow' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></div>}
+             </button>
              <button onClick={() => setActiveTab('tasks')} className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'tasks' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>
                  Tasks
                  {(caseData.tasks || []).filter(t => t.status !== 'completed').length > 0 && (
@@ -524,6 +529,8 @@ export const CaseDetail: React.FC<CaseDetailProps> = ({ caseData, onBack, onUpda
           <div className="animate-fade-in"><DemandReadiness caseData={caseData} /></div>
       ) : activeTab === 'specials' ? (
           <div className="animate-fade-in"><SpecialsTracker caseData={caseData} onUpdateCase={onUpdateCase} /></div>
+      ) : activeTab === 'workflow' ? (
+          <div className="animate-fade-in"><CaseWorkflow caseData={caseData} onUpdateCase={onUpdateCase} /></div>
       ) : activeTab === 'tasks' ? (
           <div className="animate-fade-in"><CaseTasksPanel caseData={caseData} onUpdateCase={onUpdateCase} /></div>
       ) : activeTab === 'medical' ? (

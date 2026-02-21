@@ -18,7 +18,54 @@ export type PhotoCategory = 'drivers_license' | 'insurance_card' | 'client_pd' |
 
 export type EmailCategory = 'offer' | 'counteroffer' | 'coverage_response' | 'liability_decision' | 'medical_records' | 'medical_bills' | 'policy_limits_response' | 'client_communication' | 'attorney_correspondence' | 'general';
 
-export type TaskType = 'coverage_followup' | 'liability_followup' | 'policy_limits' | 'er_records' | 'er_bills' | 'medical_records' | 'demand_prep' | 'general';
+export type TaskType =
+  | 'coverage_followup'
+  | 'liability_followup'
+  | 'policy_limits'
+  | 'er_records'
+  | 'er_bills'
+  | 'medical_records'
+  | 'demand_prep'
+  | 'general'
+  | 'retainer'
+  | 'lor_defendant'
+  | 'lor_client_ins'
+  | 'crash_report_request'
+  | 'crash_report_received'
+  | 'hipaa'
+  | 'treatment_followup'
+  | 'bill_request'
+  | 'records_request'
+  | 'specials_compile'
+  | 'demand_review';
+
+export type WorkflowStage =
+  | 'intake'
+  | 'investigation'
+  | 'insurance'
+  | 'treatment'
+  | 'records_requests'
+  | 'records_collection'
+  | 'pre_demand'
+  | 'demand';
+
+export interface WorkflowStageInfo {
+  id: WorkflowStage;
+  label: string;
+  description: string;
+  icon: string;
+}
+
+export const WORKFLOW_STAGES: WorkflowStageInfo[] = [
+  { id: 'intake', label: 'Intake', description: 'Retainer, LOR, HIPAA authorizations', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z' },
+  { id: 'investigation', label: 'Investigation', description: 'Crash report, evidence collection', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
+  { id: 'insurance', label: 'Insurance', description: 'Coverage, liability, policy limits', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
+  { id: 'treatment', label: 'Treatment', description: 'Medical treatment monitoring', icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z' },
+  { id: 'records_requests', label: 'Records Requests', description: 'Send bill and records requests', icon: 'M12 19l9 2-9-18-9 18 9-2zm0 0v-8' },
+  { id: 'records_collection', label: 'Records Collection', description: 'Receive all bills and records', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
+  { id: 'pre_demand', label: 'Pre-Demand', description: 'Compile specials, attorney review', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
+  { id: 'demand', label: 'Demand Letter', description: 'Prepare and send demand letter', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
+];
 
 export type TaskStatus = 'open' | 'completed' | 'overdue';
 
@@ -113,6 +160,11 @@ export interface MedicalProvider {
   dateOfLastVisit?: string;
   isCurrentlyTreating?: boolean;
   preferredContactMethod?: PreferredContactMethod;
+  billRequestDate?: string;
+  billRequestStatus?: 'not_requested' | 'requested' | 'received' | 'na';
+  recordsRequestDate?: string;
+  recordsRequestStatus?: 'not_requested' | 'requested' | 'received' | 'na';
+  treatmentComplete?: boolean;
 }
 
 export interface EmailAttachment {
@@ -472,4 +524,8 @@ export interface CaseFile {
   mriCompletedDate?: string;
   treatmentEndDate?: string;
   specials?: SpecialsPackage;
+  workflowInitialized?: boolean;
+  lorDefendantSentDate?: string;
+  lorClientInsSentDate?: string;
+  crashReportRequestedDate?: string;
 }

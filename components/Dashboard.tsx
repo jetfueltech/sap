@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { CaseFile, CaseStatus } from '../types';
+import { NeedsAttentionPanel } from './NeedsAttentionPanel';
 
 interface DashboardProps {
   cases: CaseFile[];
@@ -233,6 +234,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ cases, onSelectCase, onOpe
                 </button>
             )}
       </div>
+
+      <NeedsAttentionPanel
+        cases={cases}
+        onSelectCase={(caseId) => {
+          const c = cases.find(x => x.id === caseId);
+          if (c) onSelectCase(c);
+        }}
+      />
 
       {viewMode === 'table' ? (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col shadow-sm">

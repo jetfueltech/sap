@@ -16,6 +16,17 @@ const TYPE_LABELS: Record<TaskType, string> = {
   medical_records: 'Medical Records',
   demand_prep: 'Demand Prep',
   general: 'General',
+  retainer: 'Retainer',
+  lor_defendant: 'LOR - Defendant',
+  lor_client_ins: 'LOR - Client Ins.',
+  crash_report_request: 'Crash Report',
+  crash_report_received: 'Crash Report',
+  hipaa: 'HIPAA Auth',
+  treatment_followup: 'Treatment Check',
+  bill_request: 'Bill Request',
+  records_request: 'Records Request',
+  specials_compile: 'Specials',
+  demand_review: 'Demand Review',
 };
 
 const TYPE_COLORS: Record<TaskType, string> = {
@@ -27,6 +38,17 @@ const TYPE_COLORS: Record<TaskType, string> = {
   medical_records: 'bg-teal-50 text-teal-700 border-teal-200',
   demand_prep: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   general: 'bg-slate-50 text-slate-700 border-slate-200',
+  retainer: 'bg-violet-50 text-violet-700 border-violet-200',
+  lor_defendant: 'bg-sky-50 text-sky-700 border-sky-200',
+  lor_client_ins: 'bg-sky-50 text-sky-700 border-sky-200',
+  crash_report_request: 'bg-slate-50 text-slate-700 border-slate-200',
+  crash_report_received: 'bg-slate-50 text-slate-700 border-slate-200',
+  hipaa: 'bg-pink-50 text-pink-700 border-pink-200',
+  treatment_followup: 'bg-green-50 text-green-700 border-green-200',
+  bill_request: 'bg-orange-50 text-orange-700 border-orange-200',
+  records_request: 'bg-teal-50 text-teal-700 border-teal-200',
+  specials_compile: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  demand_review: 'bg-emerald-50 text-emerald-700 border-emerald-200',
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
